@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Backend\DepartmentController;
+use App\Http\Controllers\Backend\ServiceRegistrationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,24 +16,29 @@ use App\Http\Controllers\UserController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+// Trang chủ cho người dùng
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/service-register', [HomeController::class, 'register'])->name('service.register');
+
+// Test route
+Route::get('/test-form', function() {
+    return view('test-form');
 });
 
+// Test API route
+Route::get('/api-test', function() {
+    return view('api-test');
+});
 
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
-Route::group(['middleware' => ['auth']], function() {
-
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
-    Route::resource('roles', RoleController::class);
-    Route::resource('users', UserController::class);
-    Route::resource('permissions', PermissionController::class);
-
-    // Thêm tỉnh thành phố
-    Route::get('/location/postJson', [App\Http\Controllers\Backend\CityController::class, 'postJson']);
+// Admin routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('departments', DepartmentController::class);
+    Route::resource('service-registrations', ServiceRegistrationController::class)->except(['create', 'store', 'edit', 'update']);
+    Route::patch('service-registrations/{registration}/status', [ServiceRegistrationController::class, 'updateStatus'])->name('service-registrations.update-status');
 });
 
 require __DIR__.'/auth.php';

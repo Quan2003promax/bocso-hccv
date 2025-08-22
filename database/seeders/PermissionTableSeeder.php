@@ -33,6 +33,17 @@ class PermissionTableSeeder extends Seeder
             'permission-edit',
             'permission-delete',
 
+            'department-menu',
+            'department-list',
+            'department-create',
+            'department-edit',
+            'department-delete',
+
+            'service-registration-menu',
+            'service-registration-list',
+            'service-registration-show',
+            'service-registration-update-status',
+            'service-registration-delete',
         ];
 
         foreach ($permissions as $permission) {
