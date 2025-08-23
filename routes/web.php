@@ -21,12 +21,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/service-register', [HomeController::class, 'register'])->name('service.register');
 
 // Test route
-Route::get('/test-form', function() {
+Route::get('/test-form', function () {
     return view('test-form');
 });
 
 // Test API route
-Route::get('/api-test', function() {
+Route::get('/api-test', function () {
     return view('api-test');
 });
 
@@ -35,10 +35,12 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 // Admin routes
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin|Super-Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('departments', DepartmentController::class);
     Route::resource('service-registrations', ServiceRegistrationController::class)->except(['create', 'store', 'edit', 'update']);
     Route::patch('service-registrations/{registration}/status', [ServiceRegistrationController::class, 'updateStatus'])->name('service-registrations.update-status');
-});
+    Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
+    ->name('registrations.destroy');
 
-require __DIR__.'/auth.php';
+});
+require __DIR__ . '/auth.php';

@@ -38,11 +38,11 @@ class ServiceRegistrationController extends Controller
         return redirect()->back()->with('success', 'Trạng thái đã được cập nhật thành công!');
     }
 
-    public function destroy(ServiceRegistration $registration)
+    public function destroy($id)
     {
+        $registration = \App\Models\ServiceRegistration::findOrFail($id);
         $registration->delete();
 
-        return redirect()->route('admin.service-registrations.index')
-            ->with('success', 'Đăng ký dịch vụ đã được xóa thành công!');
+        return redirect()->back()->with('success', 'Xóa thành công!');
     }
 }
