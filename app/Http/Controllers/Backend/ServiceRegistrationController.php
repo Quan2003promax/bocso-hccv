@@ -77,8 +77,9 @@ class ServiceRegistrationController extends Controller
         }
     }
 
-    public function show(ServiceRegistration $registration)
+    public function show($id)
     {
+        $registration = ServiceRegistration::with('department')->findOrFail($id);
         return view('backend.service-registrations.show', compact('registration'));
     }
 
