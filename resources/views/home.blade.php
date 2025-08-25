@@ -32,9 +32,66 @@
             font-size: 0.8rem;
             padding: 5px 10px;
         }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .nav-link {
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ route('home') }}">
+                <i class="fas fa-clipboard-list me-2"></i>
+                Hệ thống bốc số thứ tự
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    @guest
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Đăng nhập
+                            </a>
+                        </li>
+                    @else
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-2"></i>
+                                {{ Auth::user()->name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-2"></i>
+                                    Dashboard
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-2"></i>
+                                            Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    @endguest
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <!-- Hero Section -->
     <section class="hero-section text-center">
         <div class="container">
@@ -184,9 +241,22 @@
                                                 <td>{{ $registration->department->name }}</td>
                                                 <td>{{ $registration->created_at->format('H:i d/m/Y') }}</td>
                                                 <td class="text-center">
-                                                    <span class="badge bg-warning status-badge">
-                                                        <i class="fas fa-clock me-1"></i>Chờ xử lý
-                                                    </span>
+                                                    @switch($registration->status)
+                                                        @case('pending')
+                                                            <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                                            @break
+                                                        @case('received')
+                                                            <span class="badge bg-info text-dark">Đã tiếp nhận</span>
+                                                            @break
+                                                        @case('processing')
+                                                            <span class="badge bg-primary text-white">Đang xử lý</span>
+                                                            @break
+                                                        @case('completed')
+                                                            <span class="badge bg-success text-white">Hoàn thành</span>
+                                                            @break
+                                                        @default
+                                                            <span class="badge bg-secondary text-white">{{ $registration->status }}</span>
+                                                    @endswitch
                                                 </td>
                                             </tr>
                                         @empty

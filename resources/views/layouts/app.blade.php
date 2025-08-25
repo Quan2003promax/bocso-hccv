@@ -14,10 +14,12 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <!-- Thêm vào <head> của layouts/app.blade.php hoặc components/app-layout.blade.php -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
+    
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased">
@@ -33,15 +35,17 @@
         <!-- Page Heading -->
         <header class="bg-white shadow">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                {{ $header }}
+            @yield('header')
             </div>
         </header>
 
         <!-- Page Content -->
         <main>
-            {{ $slot }}
+        @yield('content')
         </main>
     </div>
+    
+    @stack('scripts')
 </body>
 
 </html>

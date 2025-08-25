@@ -37,10 +37,10 @@ Route::get('/dashboard', function () {
 // Admin routes
 Route::middleware(['auth', 'role:admin|Super-Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('departments', DepartmentController::class);
-    Route::resource('service-registrations', ServiceRegistrationController::class)->except(['create', 'store', 'edit', 'update']);
+    Route::resource('service-registrations', ServiceRegistrationController::class)->except(['edit', 'update']);
+    Route::post('service-registrations', [ServiceRegistrationController::class, 'store'])->name('service-registrations.store');
     Route::patch('service-registrations/{registration}/status', [ServiceRegistrationController::class, 'updateStatus'])->name('service-registrations.update-status');
     Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
     ->name('registrations.destroy');
-
 });
 require __DIR__ . '/auth.php';
