@@ -210,7 +210,7 @@
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-4">
         <div class="container">
-            <p class="mb-0">&copy; {{ date('Y') }} Hệ thống bốc số thứ tự. Tất cả quyền được bảo lưu.</p>
+            <p class="mb-0">&copy; © 2025 Thiết kế và xây dựng bởi VIETTECHKEY. All rights reserved.</p>
         </div>
     </footer>
 

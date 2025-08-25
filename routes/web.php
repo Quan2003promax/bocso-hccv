@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\ServiceRegistrationController;
 
@@ -31,11 +32,18 @@ Route::get('/api-test', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = Auth::user();
+
+    if ($user->hasRole('Super-Admin')) {
+        return redirect()->route('users.index');
+    }
+
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 
+Route::resource('users', UserController::class);
 // Admin routes
-Route::middleware(['auth', 'role:admin|Super-Admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('departments', DepartmentController::class);
     Route::resource('service-registrations', ServiceRegistrationController::class)->except(['create', 'store', 'edit', 'update']);
     Route::patch('service-registrations/{registration}/status', [ServiceRegistrationController::class, 'updateStatus'])->name('service-registrations.update-status');
