@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceRegistration;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ServiceRegistrationController extends Controller
 {
@@ -18,6 +19,64 @@ class ServiceRegistrationController extends Controller
         return view('backend.service-registrations.index', compact('registrations'));
     }
 
+    public function store(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'birth_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'identity_number' => 'required|string|max:20',
+            'department_id' => 'required|exists:departments,id'
+        ], [
+            'full_name.required' => 'Vui lòng nhập họ và tên',
+            'full_name.string' => 'Họ và tên phải là chuỗi ký tự',
+            'full_name.max' => 'Họ và tên không được quá 255 ký tự',
+            'birth_year.required' => 'Vui lòng nhập năm sinh',
+            'birth_year.integer' => 'Năm sinh phải là số nguyên',
+            'birth_year.min' => 'Năm sinh không hợp lệ',
+            'birth_year.max' => 'Năm sinh không hợp lệ',
+            'identity_number.required' => 'Vui lòng nhập số căn cước công dân',
+            'identity_number.string' => 'Số căn cước công dân phải là chuỗi ký tự',
+            'identity_number.max' => 'Số căn cước công dân không được quá 20 ký tự',
+            'department_id.required' => 'Vui lòng chọn phòng ban',
+            'department_id.exists' => 'Phòng ban không tồn tại'
+        ]);
+
+        try {
+            // Kiểm tra xem phòng ban có tồn tại và active không
+            $department = Department::where('id', $request->department_id)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$department) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['department_id' => 'Phòng ban không hoạt động hoặc không tồn tại']);
+            }
+
+            // Tạo số thứ tự
+            $queueNumber = $this->generateQueueNumber($request->department_id);
+
+            $registration = ServiceRegistration::create([
+                'full_name' => trim($request->full_name),
+                'birth_year' => (int) $request->birth_year,
+                'identity_number' => trim($request->identity_number),
+                'department_id' => $request->department_id,
+                'queue_number' => $queueNumber,
+                'status' => 'pending'
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Đăng ký thành công! Số thứ tự của bạn là: ' . $queueNumber);
+
+        } catch (\Exception $e) {
+            \Log::error('Lỗi đăng ký dịch vụ: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['general' => 'Có lỗi xảy ra khi đăng ký dịch vụ. Vui lòng thử lại.']);
+        }
+    }
+
     public function show(ServiceRegistration $registration)
     {
         return view('backend.service-registrations.show', compact('registration'));
@@ -26,16 +85,47 @@ class ServiceRegistrationController extends Controller
     public function updateStatus(Request $request, ServiceRegistration $registration)
     {
         $request->validate([
-            'status' => 'required|in:pending,processing,completed,cancelled',
-            'notes' => 'nullable|string'
+            'status' => 'required|in:pending,received,processing,completed',
+        ], [
+            'status.required' => 'Trạng thái là bắt buộc',
+            'status.in' => 'Trạng thái không hợp lệ'
         ]);
 
-        $registration->update([
-            'status' => $request->status,
-            'notes' => $request->notes
-        ]);
+        try {
+            $oldStatus = $registration->status;
+            $registration->update([
+                'status' => $request->status
+            ]);
 
-        return redirect()->back()->with('success', 'Trạng thái đã được cập nhật thành công!');
+            // Log thay đổi trạng thái
+            \Log::info("Trạng thái đăng ký #{$registration->id} thay đổi từ '{$oldStatus}' sang '{$request->status}'");
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Trạng thái đã được cập nhật thành công!',
+                    'data' => [
+                        'id' => $registration->id,
+                        'status' => $registration->status,
+                        'old_status' => $oldStatus
+                    ]
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Trạng thái đã được cập nhật thành công!');
+            
+        } catch (\Exception $e) {
+            \Log::error('Lỗi cập nhật trạng thái: ' . $e->getMessage());
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra khi cập nhật trạng thái'
+                ], 500);
+            }
+
+            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật trạng thái']);
+        }
     }
 
     public function destroy($id)
@@ -44,5 +134,31 @@ class ServiceRegistrationController extends Controller
         $registration->delete();
 
         return redirect()->back()->with('success', 'Xóa thành công!');
+    }
+
+    private function generateQueueNumber($departmentId)
+    {
+        $department = Department::find($departmentId);
+        if (!$department) {
+            throw new \Exception('Không tìm thấy phòng ban');
+        }
+
+        $today = now()->format('Ymd');
+        
+        // Lấy số thứ tự cuối cùng của ngày hôm nay
+        $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
+            ->whereDate('created_at', today())
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastRegistration) {
+            $lastNumber = (int) substr($lastRegistration->queue_number, -3);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        // Format đơn giản: chỉ hiển thị số thứ tự
+        return str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 }

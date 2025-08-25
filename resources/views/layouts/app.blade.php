@@ -14,10 +14,12 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <!-- Thêm vào <head> của layouts/app.blade.php hoặc components/app-layout.blade.php -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
+
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased">
@@ -44,23 +46,25 @@
 
 
         <footer class="bg-gradient-to-r from-gray-100 to-gray-200 border-t border-gray-300 mt-10">
-    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
-        
-        <!-- Bên trái -->
-        <p class="mb-2 md:mb-0">
-            © 2025 <span class="font-semibold text-gray-700">VIETTECHKEY</span>.  
-            <span class="italic text-gray-500">Thiết kế & phát triển bởi Phạm Huy Hoàng</span>
-        </p>
+            <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
 
-        <!-- Bên phải -->
-        <div class="flex items-center space-x-4">
-            <a href="#" class="hover:text-blue-600 transition">Chính sách</a>
-            <span class="text-gray-400">|</span>
-            <a href="#" class="hover:text-blue-600 transition">Liên hệ</a>
-        </div>
+                <!-- Bên trái -->
+                <p class="mb-2 md:mb-0">
+                    © 2025 <span class="font-semibold text-gray-700">VIETTECHKEY</span>.
+                    <span class="italic text-gray-500">Thiết kế & phát triển bởi Phạm Huy Hoàng</span>
+                </p>
+
+                <!-- Bên phải -->
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="hover:text-blue-600 transition">Chính sách</a>
+                    <span class="text-gray-400">|</span>
+                    <a href="#" class="hover:text-blue-600 transition">Liên hệ</a>
+                </div>
+            </div>
+        </footer>
     </div>
-</footer>
-    </div>
+
+    @stack('scripts')
 </body>
 
 </html>

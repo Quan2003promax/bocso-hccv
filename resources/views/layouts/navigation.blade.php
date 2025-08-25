@@ -16,6 +16,10 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     
+                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                        <i class="fas fa-home me-2"></i>{{ __('Về trang chủ') }}
+                    </x-nav-link>
+                    
                     @role('admin')
                     <x-nav-link :href="route('admin.departments.index')" :active="request()->routeIs('admin.departments.*')">
                         <i class="fas fa-building me-2"></i>{{ __('Phòng ban') }}
@@ -74,6 +78,10 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                <i class="fas fa-home me-2"></i>{{ __('Về trang chủ') }}
             </x-responsive-nav-link>
             
             @role('admin')
