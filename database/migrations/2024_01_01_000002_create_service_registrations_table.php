@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('identity_number');
             $table->foreignId('department_id')->constrained()->onDelete('cascade');
             $table->string('queue_number'); // Bỏ unique constraint
-            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'received', 'processing', 'completed', 'cancelled', 'returned'])->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

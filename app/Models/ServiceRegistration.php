@@ -32,9 +32,11 @@ class ServiceRegistration extends Model
     {
         $statuses = [
             'pending' => 'Chờ xử lý',
+            'received' => 'Đã tiếp nhận',
             'processing' => 'Đang xử lý',
             'completed' => 'Đã xử lý',
-            'cancelled' => 'Đã hủy'
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Trả hồ sơ'
         ];
 
         return $statuses[$this->status] ?? $this->status;

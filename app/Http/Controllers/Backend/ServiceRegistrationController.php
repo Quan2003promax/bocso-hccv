@@ -85,7 +85,7 @@ class ServiceRegistrationController extends Controller
     public function updateStatus(Request $request, ServiceRegistration $registration)
     {
         $request->validate([
-            'status' => 'required|in:pending,received,processing,completed',
+            'status' => 'required|in:pending,received,processing,completed,returned',
         ], [
             'status.required' => 'Trạng thái là bắt buộc',
             'status.in' => 'Trạng thái không hợp lệ'

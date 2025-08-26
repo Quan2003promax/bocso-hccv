@@ -13,7 +13,8 @@ class HomeController extends Controller
     {
         $departments = Department::where('status', 'active')->get();
         $pendingRegistrations = ServiceRegistration::with('department')
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'received', 'returned'])
+            ->orderByRaw("FIELD(status, 'pending','received','returned')")
             ->orderBy('created_at', 'asc')
             ->limit(10)
             ->get();
