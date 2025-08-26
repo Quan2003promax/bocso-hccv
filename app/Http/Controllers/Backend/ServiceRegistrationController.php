@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceRegistration;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use App\Events\StatusUpdated;
 use Illuminate\Support\Str;
 
 class ServiceRegistrationController extends Controller
@@ -67,10 +68,9 @@ class ServiceRegistrationController extends Controller
 
             return redirect()->back()
                 ->with('success', 'Đăng ký thành công! Số thứ tự của bạn là: ' . $queueNumber);
-
         } catch (\Exception $e) {
             \Log::error('Lỗi đăng ký dịch vụ: ' . $e->getMessage());
-            
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['general' => 'Có lỗi xảy ra khi đăng ký dịch vụ. Vui lòng thử lại.']);
@@ -101,6 +101,11 @@ class ServiceRegistrationController extends Controller
         $registration->status = $request->status;
         $registration->save();
 
+        StatusUpdated::dispatch([
+            'status' => 'online',
+            'message' => 'Dashboard vừa cập nhật.',
+            'at' => now()->toDateTimeString(),
+        ]);
         return response()->json([
             'success' => true,
             'message' => 'Cập nhật trạng thái thành công.'
@@ -123,7 +128,7 @@ class ServiceRegistrationController extends Controller
         }
 
         $today = now()->format('Ymd');
-        
+
         // Lấy số thứ tự cuối cùng của ngày hôm nay
         $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
             ->whereDate('created_at', today())

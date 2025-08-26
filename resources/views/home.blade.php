@@ -230,7 +230,7 @@
                                             <th class="text-center">Trạng thái</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="queue-tbody">
                                         @forelse($pendingRegistrations as $index => $registration)
                                             <tr>
                                                 <td class="text-center">{{ $index + 1 }}</td>
@@ -287,5 +287,35 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Socket.IO v2 từ Echo server (phải chạy ở :6001) -->
+<script src="http://localhost:6001/socket.io/socket.io.js"></script>
+
+<!-- Laravel Echo IIFE -->
+<script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+
+<script>
+  // cho Echo dùng io toàn cục
+  window.io = io;
+
+  // Một số bản IIFE expose constructor khác nhau, bắt tất cả:
+  const EchoCtor = (window.Echo && window.Echo.default) || window.Echo || window.LaravelEcho;
+
+  const echo = new EchoCtor({
+    broadcaster: 'socket.io',
+    host: `${location.hostname}:6001`,
+    transports: ['websocket','polling'],
+  });
+
+  // Test bắt event từ /test-status
+  echo.channel('laravel_database_status')
+      .listen('.status.updated', (e) => {
+        console.log('🔥 received .status.updated', e);
+        // alert(`Status: ${e.status}\nMessage: ${e.message}`);
+      });
+
+  echo.connector.socket.on('connect',      () => console.log('✅ socket connected'));
+  echo.connector.socket.on('connect_error',(err) => console.error('❌ connect_error', err));
+</script>
+
 </body>
 </html>
