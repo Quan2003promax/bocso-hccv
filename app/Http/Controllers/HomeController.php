@@ -13,8 +13,9 @@ class HomeController extends Controller
     {
         $departments = Department::where('status', 'active')->get();
         $pendingRegistrations = ServiceRegistration::with('department')
-            ->whereIn('status', ['pending', 'received', 'returned'])
-            ->orderByRaw("FIELD(status, 'pending','received','returned')")
+            // ->whereIn('status', ['pending', 'received','processing', 'completed', 'returned']) case full field status
+            ->whereIn('status', ['pending', 'received','processing', 'returned']) // case short field status
+            ->orderByRaw("FIELD(status, 'pending', 'received','processing', 'completed', 'returned')")
             ->orderBy('created_at', 'asc')
             ->limit(10)
             ->get();

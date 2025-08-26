@@ -83,50 +83,28 @@ class ServiceRegistrationController extends Controller
         return view('backend.service-registrations.show', compact('registration'));
     }
 
-    public function updateStatus(Request $request, ServiceRegistration $registration)
+    public function updateStatus(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:pending,received,processing,completed,returned',
-        ], [
-            'status.required' => 'Trạng thái là bắt buộc',
-            'status.in' => 'Trạng thái không hợp lệ'
         ]);
 
-        try {
-            $oldStatus = $registration->status;
-            $registration->update([
-                'status' => $request->status
-            ]);
+        $registration = ServiceRegistration::find($id);
 
-            // Log thay đổi trạng thái
-            \Log::info("Trạng thái đăng ký #{$registration->id} thay đổi từ '{$oldStatus}' sang '{$request->status}'");
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Trạng thái đã được cập nhật thành công!',
-                    'data' => [
-                        'id' => $registration->id,
-                        'status' => $registration->status,
-                        'old_status' => $oldStatus
-                    ]
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Trạng thái đã được cập nhật thành công!');
-            
-        } catch (\Exception $e) {
-            \Log::error('Lỗi cập nhật trạng thái: ' . $e->getMessage());
-            
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Có lỗi xảy ra khi cập nhật trạng thái'
-                ], 500);
-            }
-
-            return redirect()->back()->withErrors(['general' => 'Có lỗi xảy ra khi cập nhật trạng thái']);
+        if (!$registration) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy đăng ký.'
+            ], 404);
         }
+
+        $registration->status = $request->status;
+        $registration->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái thành công.'
+        ]);
     }
 
     public function destroy($id)
