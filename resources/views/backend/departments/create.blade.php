@@ -1,72 +1,62 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">
-                            <i class="fas fa-plus me-2"></i>
-                            Thêm phòng ban mới
-                        </h3>
-                        <a href="{{ route('admin.departments.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>
-                            Quay lại
-                        </a>
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-plus mr-2"></i>
+                Thêm phòng ban mới
+            </h3>
+            <a href="{{ route('admin.departments.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+        <div class="p-6">
+            <form action="{{ route('admin.departments.store') }}" method="POST">
+                        @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                            Tên phòng ban <span class="text-red-600">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" value="{{ old('name') }}" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-500 @enderror">
+                        @error('name')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">
+                            Trạng thái <span class="text-red-600">*</span>
+                        </label>
+                        <select id="status" name="status" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('status') border-red-500 @enderror">
+                            <option value="">Chọn trạng thái</option>
+                            <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Hoạt động</option>
+                            <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Không hoạt động</option>
+                        </select>
+                        @error('status')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.departments.store') }}" method="POST">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">
-                                        Tên phòng ban <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           id="name" name="name" value="{{ old('name') }}" required>
-                                    @error('name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="status" class="form-label">
-                                        Trạng thái <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select @error('status') is-invalid @enderror" 
-                                            id="status" name="status" required>
-                                        <option value="">Chọn trạng thái</option>
-                                        <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Hoạt động</option>
-                                        <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Không hoạt động</option>
-                                    </select>
-                                    @error('status')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Mô tả</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" name="description" rows="4">{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                Lưu phòng ban
-                            </button>
-                        </div>
-                    </form>
+                <div class="mt-6">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Mô tả</label>
+                    <textarea id="description" name="description" rows="4"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                    @error('description')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
-            </div>
+                <div class="mt-6 text-right">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-black hover:bg-blue-700">
+                        <i class="fas fa-save mr-2"></i>
+                        Lưu phòng ban
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
