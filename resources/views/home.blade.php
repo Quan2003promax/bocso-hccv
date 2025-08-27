@@ -335,16 +335,6 @@
             host: `${location.hostname}:6001`,
             transports: ['websocket', 'polling'],
         });
-
-        // Test bắt event từ /test-status
-        echo.channel('laravel_database_status')
-            .listen('.status.updated', (e) => {
-                console.log('🔥 received .status.updated', e);
-                // alert(`Status: ${e.status}\nMessage: ${e.message}`);
-            });
-
-        echo.connector.socket.on('connect', () => console.log('✅ socket connected'));
-        echo.connector.socket.on('connect_error', (err) => console.error('❌ connect_error', err));
     </script>
     <script src="{{ asset('js/87cb0aedbef434af1d211ace28fe4ccc.js') }}"></script>
 

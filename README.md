@@ -19,6 +19,8 @@ composer require predis/predis
 #after set up env run:
 php artisan config:clear
 php artisan cache:clear
-#create channel
-php artisan make:event StatusUpdated
+
+#run connect redis
+laravel-echo-server start
+
 
