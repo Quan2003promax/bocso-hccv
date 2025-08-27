@@ -52,4 +52,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
     ->name('registrations.destroy');
 });
+// routes/web.php
+Route::get('/test-status', function () {
+    \App\Events\StatusUpdated::dispatch([
+        'status' => 'online',
+        'message' => 'Test ok',
+        'at' => now()->toDateTimeString(),
+    ]);
+    return 'Broadcasted';
+});
+
 require __DIR__ . '/auth.php';

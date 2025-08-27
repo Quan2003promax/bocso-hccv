@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\ServiceRegistration;
+use App\Events\RegistrationCreated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -14,7 +15,7 @@ class HomeController extends Controller
         $departments = Department::where('status', 'active')->get();
         $pendingRegistrations = ServiceRegistration::with('department')
             // ->whereIn('status', ['pending', 'received','processing', 'completed', 'returned']) case full field status
-            ->whereIn('status', ['pending', 'received','processing', 'returned']) // case short field status
+            ->whereIn('status', ['pending', 'received', 'processing', 'returned']) // case short field status
             ->orderByRaw("FIELD(status, 'pending', 'received','processing', 'completed', 'returned')")
             ->orderBy('created_at', 'asc')
             ->limit(10)
@@ -65,17 +66,26 @@ class HomeController extends Controller
                 'queue_number' => $queueNumber,
                 'status' => 'pending'
             ]);
-
+            //fire event
+            RegistrationCreated::dispatch([
+                'id'           => $registration->id,
+                'queue_number' => $registration->queue_number,
+                'full_name'    => $registration->full_name,
+                'department'   => $registration->department->name,
+                'created_at'   => $registration->created_at->format('H:i d/m/Y'),
+                'status'       => $registration->status,
+                'show_url'     => route('admin.service-registrations.show', $registration),
+                'delete_url'   => route('admin.service-registrations.destroy', $registration),
+            ]);
             \Log::info('Đăng ký thành công:', ['queue_number' => $queueNumber, 'registration_id' => $registration->id]);
 
             return redirect()->back()
                 ->with('success', 'Đăng ký thành công! Số thứ tự của bạn là: ' . $queueNumber);
-
         } catch (\Exception $e) {
             // Log lỗi để debug
             \Log::error('Lỗi đăng ký dịch vụ: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['general' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
@@ -90,7 +100,7 @@ class HomeController extends Controller
         }
 
         $today = now()->format('Ymd');
-        
+
         // Lấy số thứ tự cuối cùng của ngày hôm nay
         $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
             ->whereDate('created_at', today())
