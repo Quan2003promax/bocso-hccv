@@ -22,25 +22,14 @@ class ServiceRegistrationController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'birth_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'identity_number' => 'required|string|max:20',
-            'department_id' => 'required|exists:departments,id'
-        ], [
-            'full_name.required' => 'Vui lòng nhập họ và tên',
-            'full_name.string' => 'Họ và tên phải là chuỗi ký tự',
-            'full_name.max' => 'Họ và tên không được quá 255 ký tự',
-            'birth_year.required' => 'Vui lòng nhập năm sinh',
-            'birth_year.integer' => 'Năm sinh phải là số nguyên',
-            'birth_year.min' => 'Năm sinh không hợp lệ',
-            'birth_year.max' => 'Năm sinh không hợp lệ',
-            'identity_number.required' => 'Vui lòng nhập số căn cước công dân',
-            'identity_number.string' => 'Số căn cước công dân phải là chuỗi ký tự',
-            'identity_number.max' => 'Số căn cước công dân không được quá 20 ký tự',
-            'department_id.required' => 'Vui lòng chọn phòng ban',
-            'department_id.exists' => 'Phòng ban không tồn tại'
-        ]);
+        // Sử dụng validation rules từ model
+        $validator = \Validator::make($request->all(), ServiceRegistration::getRules(), ServiceRegistration::$messages);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         try {
             // Kiểm tra xem phòng ban có tồn tại và active không
@@ -61,6 +50,8 @@ class ServiceRegistrationController extends Controller
                 'full_name' => trim($request->full_name),
                 'birth_year' => (int) $request->birth_year,
                 'identity_number' => trim($request->identity_number),
+                'email' => trim($request->email),
+                'phone' => trim($request->phone),
                 'department_id' => $request->department_id,
                 'queue_number' => $queueNumber,
                 'status' => 'pending'
