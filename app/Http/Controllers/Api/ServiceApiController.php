@@ -9,6 +9,8 @@ use App\Http\Resources\DepartmentResource;
 use App\Http\Resources\ServiceRegistrationResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ServiceApiController extends Controller
 {
@@ -55,18 +57,19 @@ class ServiceApiController extends Controller
                 ], 400);
             }
 
-            // Tạo số thứ tự
-            $queueNumber = $this->generateQueueNumber($request->department_id);
-
-            // Tạo đăng ký
-            $registration = ServiceRegistration::create([
-                'full_name' => trim($request->full_name),
-                'birth_year' => (int) $request->birth_year,
-                'identity_number' => trim($request->identity_number),
-                'department_id' => $request->department_id,
-                'queue_number' => $queueNumber,
-                'status' => 'pending'
-            ]);
+            // Transaction để tránh trùng số
+            [$registration, $queueNumber] = DB::transaction(function () use ($request) {
+                $queueNumber = $this->generateQueueNumber($request->department_id, true);
+                $registration = ServiceRegistration::create([
+                    'full_name' => trim($request->full_name),
+                    'birth_year' => (int) $request->birth_year,
+                    'identity_number' => trim($request->identity_number),
+                    'department_id' => $request->department_id,
+                    'queue_number' => $queueNumber,
+                    'status' => 'pending'
+                ]);
+                return [$registration, $queueNumber];
+            });
 
             // Load relationship để sử dụng Resource
             $registration->load('department');
@@ -251,30 +254,27 @@ class ServiceApiController extends Controller
     /**
      * Tạo số thứ tự
      */
-    private function generateQueueNumber($departmentId)
+    private function generateQueueNumber($departmentId, bool $updateCacheIfUsed = false)
     {
         $department = Department::find($departmentId);
         if (!$department) {
             throw new \Exception('Không tìm thấy phòng ban');
         }
-
-        $today = now()->format('Ymd');
-        
-        // Lấy số thứ tự cuối cùng của ngày hôm nay
-        $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
-            ->whereDate('created_at', today())
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastRegistration) {
-            $lastNumber = (int) substr($lastRegistration->queue_number, -3);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
+        // Nếu admin reset: dùng counter cache
+        $manualCounter = Cache::get('global_queue_counter', 0);
+        if ($manualCounter > 0) {
+            $next = $manualCounter + 1;
+            if ($updateCacheIfUsed) {
+                Cache::put('global_queue_counter', $next);
+            }
+            return str_pad($next, 3, '0', STR_PAD_LEFT);
         }
 
-        // Format đơn giản: chỉ hiển thị số thứ tự
-        return str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        // Không dùng cache: lock để lấy số mới nhất, tránh trùng
+        $last = ServiceRegistration::lockForUpdate()->orderBy('id', 'desc')->first();
+        $lastNumber = $last ? (int) preg_replace('/\\D/', '', $last->queue_number) : 0;
+        $next = $lastNumber + 1;
+        return str_pad($next, 3, '0', STR_PAD_LEFT);
     }
 
     /**

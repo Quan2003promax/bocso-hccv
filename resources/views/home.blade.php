@@ -254,10 +254,11 @@
                                                         @case('completed')
                                                             <span class="badge bg-success text-white">Hoàn thành</span>
                                                             @break
-                                                        @case('returned')   
+                                                        @case('returned')
                                                             <span class="badge bg-secondary text-white">Trả hồ sơ</span>
                                                             @break
-                                                        @default
+                                                        @default 
+                                                            
                                                     @endswitch
                                                 </td>
                                             </tr>
