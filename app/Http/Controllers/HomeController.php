@@ -6,8 +6,8 @@ use App\Models\Department;
 use App\Models\ServiceRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use App\Jobs\ProcessDocumentUpload;
 
 class HomeController extends Controller
 {
@@ -29,19 +29,14 @@ class HomeController extends Controller
         // Debug: Log dữ liệu đầu vào
         \Log::info('Dữ liệu đăng ký:', $request->all());
 
-        // Validation rules đơn giản hơn để test
-        $request->validate([
-            'full_name' => 'required',
-            'birth_year' => 'required|integer',
-            'identity_number' => 'required',
-            'department_id' => 'required'
-        ], [
-            'full_name.required' => 'Vui lòng nhập họ và tên',
-            'birth_year.required' => 'Vui lòng nhập năm sinh',
-            'birth_year.integer' => 'Năm sinh phải là số nguyên',
-            'identity_number.required' => 'Vui lòng nhập số căn cước công dân',
-            'department_id.required' => 'Vui lòng chọn phòng ban'
-        ]);
+        // Sử dụng validation rules từ model
+        $validator = Validator::make($request->all(), ServiceRegistration::getRules(), ServiceRegistration::$messages);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         try {
             // Kiểm tra xem phòng ban có tồn tại và active không
@@ -55,23 +50,41 @@ class HomeController extends Controller
                     ->withErrors(['department_id' => 'Phòng ban không hoạt động hoặc không tồn tại']);
             }
 
-            // Tạo số và lưu trong một transaction để tránh trùng số
-            [$registration, $queueNumber] = DB::transaction(function () use ($request) {
-                $queueNumber = $this->generateQueueNumber($request->department_id, true);
+            // Xử lý file upload nếu có
+            $documentData = $this->handleFileUpload($request);
 
-                $registration = ServiceRegistration::create([
-                    'full_name' => trim($request->full_name),
-                    'birth_year' => (int) $request->birth_year,
-                    'identity_number' => trim($request->identity_number),
-                    'department_id' => $request->department_id,
-                    'queue_number' => $queueNumber,
-                    'status' => 'pending'
-                ]);
+            // Tạo số thứ tự
+            $queueNumber = $this->generateQueueNumber($request->department_id);
 
-                return [$registration, $queueNumber];
-            });
+            // Tạo dữ liệu đăng ký
+            $registrationData = [
+                'full_name' => trim($request->full_name),
+                'birth_year' => (int) $request->birth_year,
+                'identity_number' => trim($request->identity_number),
+                'email' => trim($request->email),
+                'phone' => trim($request->phone),
+                'department_id' => $request->department_id,
+                'queue_number' => $queueNumber,
+                'status' => 'pending'
+            ];
 
-            \Log::info('Đăng ký thành công:', ['queue_number' => $queueNumber, 'registration_id' => $registration->id]);
+            // Thêm thông tin file nếu có upload
+            if ($documentData) {
+                $registrationData = array_merge($registrationData, $documentData);
+            }
+
+            $registration = ServiceRegistration::create($registrationData);
+
+            // Dispatch job xử lý file upload bất đồng bộ nếu có file
+            if ($documentData) {
+                ProcessDocumentUpload::dispatch($registration->id, $documentData['document_file'], $documentData['document_original_name']);
+            }
+
+            \Log::info('Đăng ký thành công:', [
+                'queue_number' => $queueNumber, 
+                'registration_id' => $registration->id,
+                'has_file' => !empty($documentData)
+            ]);
 
             return redirect()->back()
                 ->with('success', 'Đăng ký thành công! Số thứ tự của bạn là: ' . $queueNumber);
@@ -83,31 +96,66 @@ class HomeController extends Controller
             
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['general' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+                ->withErrors(['general' => 'Có lỗi xảy ra khi đăng ký dịch vụ. Vui lòng thử lại.']);
         }
     }
 
-    private function generateQueueNumber($departmentId, bool $updateCacheIfUsed = false)
+    private function generateQueueNumber($departmentId)
     {
         $department = Department::find($departmentId);
         if (!$department) {
             throw new \Exception('Không tìm thấy phòng ban');
         }
 
-        // Nếu admin đã reset, ưu tiên bộ đếm cache
-        $manualCounter = Cache::get('global_queue_counter', 0);
-        if ($manualCounter > 0) {
-            $next = $manualCounter + 1;
-            if ($updateCacheIfUsed) {
-                Cache::put('global_queue_counter', $next);
-            }
-            return str_pad($next, 3, '0', STR_PAD_LEFT);
+        $today = now()->format('Ymd');
+        
+        // Lấy số thứ tự cuối cùng của ngày hôm nay
+        $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
+            ->whereDate('created_at', today())
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastRegistration) {
+            $lastNumber = (int) substr($lastRegistration->queue_number, -3);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
         }
 
-        // Ngược lại: khóa bảng và tính theo bản ghi cuối cùng để tránh trùng
-        $last = ServiceRegistration::lockForUpdate()->orderBy('id', 'desc')->first();
-        $lastNumber = $last ? (int) preg_replace('/\\D/', '', $last->queue_number) : 0;
-        $next = $lastNumber + 1;
-        return str_pad($next, 3, '0', STR_PAD_LEFT);
+        // Format đơn giản: chỉ hiển thị số thứ tự
+        return str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Xử lý file upload an toàn
+     */
+    private function handleFileUpload(Request $request)
+    {
+        if (!$request->hasFile('document_file') || !$request->file('document_file')->isValid()) {
+            return null;
+        }
+
+        $file = $request->file('document_file');
+        $originalName = $file->getClientOriginalName();
+        $mimeType = $file->getMimeType();
+        $size = $file->getSize();
+
+        // Kiểm tra kích thước file (128MB = 134,217,728 bytes)
+        if ($size > 134217728) {
+            throw new \Exception('Kích thước file vượt quá 128MB');
+        }
+
+        // Tạo tên file an toàn
+        $safeFileName = time() . '_' . Str::random(10) . '_' . Str::slug($originalName);
+        
+        // Lưu file vào storage
+        $path = $file->storeAs('documents', $safeFileName, 'public');
+
+        return [
+            'document_file' => $path,
+            'document_original_name' => $originalName,
+            'document_mime_type' => $mimeType,
+            'document_size' => $size
+        ];
     }
 }

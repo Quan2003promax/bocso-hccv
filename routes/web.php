@@ -19,17 +19,11 @@ use App\Http\Controllers\Backend\ServiceRegistrationController;
 
 // Trang chủ cho người dùng
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::post('/service-register', [HomeController::class, 'register'])->name('service.register');
+Route::post('/service-register', [HomeController::class, 'register'])
+    ->name('service.register')
+    ->middleware('throttle.service.registration');
 
-// Test route
-Route::get('/test-form', function () {
-    return view('test-form');
-});
 
-// Test API route
-Route::get('/api-test', function () {
-    return view('api-test');
-});
 
 Route::get('/dashboard', function () {
     $user = Auth::user();

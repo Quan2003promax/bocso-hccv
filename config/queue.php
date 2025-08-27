@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'sync'),
+    'default' => env('QUEUE_CONNECTION', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -22,7 +22,8 @@ return [
     |
     | Here you may configure the connection information for each server that
     | is used by your application. A default configuration has been added
-    | for each back-end shipped with Laravel. You are free to add more.
+    | for each back-end driver shipped with Laravel. You are free to add
+    | more.
     |
     | Drivers: "sync", "database", "beanstalkd", "sqs", "redis", "null"
     |
@@ -44,10 +45,10 @@ return [
 
         'beanstalkd' => [
             'driver' => 'beanstalkd',
-            'host' => 'localhost',
-            'queue' => 'default',
+            'host' => env('BEANSTALKD_HOST', '127.0.0.1'),
+            'queue' => env('BEANSTALKD_QUEUE', 'default'),
             'retry_after' => 90,
-            'block_for' => 0,
+            'block_for' => null,
             'after_commit' => false,
         ],
 

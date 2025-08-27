@@ -7,8 +7,6 @@ use App\Models\ServiceRegistration;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class ServiceRegistrationController extends Controller
 {
@@ -23,25 +21,14 @@ class ServiceRegistrationController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'birth_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'identity_number' => 'required|string|max:20',
-            'department_id' => 'required|exists:departments,id'
-        ], [
-            'full_name.required' => 'Vui lòng nhập họ và tên',
-            'full_name.string' => 'Họ và tên phải là chuỗi ký tự',
-            'full_name.max' => 'Họ và tên không được quá 255 ký tự',
-            'birth_year.required' => 'Vui lòng nhập năm sinh',
-            'birth_year.integer' => 'Năm sinh phải là số nguyên',
-            'birth_year.min' => 'Năm sinh không hợp lệ',
-            'birth_year.max' => 'Năm sinh không hợp lệ',
-            'identity_number.required' => 'Vui lòng nhập số căn cước công dân',
-            'identity_number.string' => 'Số căn cước công dân phải là chuỗi ký tự',
-            'identity_number.max' => 'Số căn cước công dân không được quá 20 ký tự',
-            'department_id.required' => 'Vui lòng chọn phòng ban',
-            'department_id.exists' => 'Phòng ban không tồn tại'
-        ]);
+        // Sử dụng validation rules từ model
+        $validator = \Validator::make($request->all(), ServiceRegistration::getRules(), ServiceRegistration::$messages);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         try {
             // Kiểm tra xem phòng ban có tồn tại và active không
@@ -55,21 +42,19 @@ class ServiceRegistrationController extends Controller
                     ->withErrors(['department_id' => 'Phòng ban không hoạt động hoặc không tồn tại']);
             }
 
-            // Transaction để đảm bảo không trùng số
-            [$registration, $queueNumber] = DB::transaction(function () use ($request) {
-                $queueNumber = $this->generateQueueNumber($request->department_id, true);
+            // Tạo số thứ tự
+            $queueNumber = $this->generateQueueNumber($request->department_id);
 
-                $registration = ServiceRegistration::create([
-                    'full_name' => trim($request->full_name),
-                    'birth_year' => (int) $request->birth_year,
-                    'identity_number' => trim($request->identity_number),
-                    'department_id' => $request->department_id,
-                    'queue_number' => $queueNumber,
-                    'status' => 'pending'
-                ]);
-
-                return [$registration, $queueNumber];
-            });
+            $registration = ServiceRegistration::create([
+                'full_name' => trim($request->full_name),
+                'birth_year' => (int) $request->birth_year,
+                'identity_number' => trim($request->identity_number),
+                'email' => trim($request->email),
+                'phone' => trim($request->phone),
+                'department_id' => $request->department_id,
+                'queue_number' => $queueNumber,
+                'status' => 'pending'
+            ]);
 
             return redirect()->back()
                 ->with('success', 'Đăng ký thành công! Số thứ tự của bạn là: ' . $queueNumber);
@@ -143,32 +128,29 @@ class ServiceRegistrationController extends Controller
         return redirect()->back()->with('success', 'Xóa thành công!');
     }
 
-    public function resetQueue()
-    {
-        Cache::put('global_queue_counter', 0);
-        return redirect()->back()->with('success', 'Đã reset số thứ tự về 000');
-    }
-
-    private function generateQueueNumber($departmentId, bool $updateCacheIfUsed = false)
+    private function generateQueueNumber($departmentId)
     {
         $department = Department::find($departmentId);
         if (!$department) {
             throw new \Exception('Không tìm thấy phòng ban');
         }
-        // Nếu admin vừa reset thì ưu tiên cache counter
-        $manualCounter = Cache::get('global_queue_counter', 0);
-        if ($manualCounter > 0) {
-            $next = $manualCounter + 1;
-            if ($updateCacheIfUsed) {
-                Cache::put('global_queue_counter', $next);
-            }
-            return str_pad($next, 3, '0', STR_PAD_LEFT);
+
+        $today = now()->format('Ymd');
+        
+        // Lấy số thứ tự cuối cùng của ngày hôm nay
+        $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
+            ->whereDate('created_at', today())
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastRegistration) {
+            $lastNumber = (int) substr($lastRegistration->queue_number, -3);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
         }
 
-        // Không dùng cache: tính theo DB với lock để tránh trùng
-        $last = ServiceRegistration::lockForUpdate()->orderBy('id', 'desc')->first();
-        $lastNumber = $last ? (int) preg_replace('/\\D/', '', $last->queue_number) : 0;
-        $next = $lastNumber + 1;
-        return str_pad($next, 3, '0', STR_PAD_LEFT);
+        // Format đơn giản: chỉ hiển thị số thứ tự
+        return str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 }
