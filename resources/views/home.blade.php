@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,7 +50,6 @@
 
         .fade-out {
             animation: fadeOut 0.8s forwards;
-            /* chạy 0.8 giây rồi giữ trạng thái cuối */
         }
 
         @keyframes fadeOut {
@@ -60,8 +60,24 @@
 
             to {
                 opacity: 0;
-                transform: scale(0.95);
+                transform: scale(.95);
                 height: 0;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
     </style>
@@ -330,51 +346,15 @@
         echo.connector.socket.on('connect', () => console.log('✅ socket connected'));
         echo.connector.socket.on('connect_error', (err) => console.error('❌ connect_error', err));
     </script>
+    <script src="{{ asset('js/87cb0aedbef434af1d211ace28fe4ccc.js') }}"></script>
+
     <script>
-        // Hàm render badge theo status
-        function statusBadgeHtml(status) {
-            switch (status) {
-                case 'pending':
-                    return '<span class="badge bg-warning text-dark">Chờ xử lý</span>';
-                case 'received':
-                    return '<span class="badge bg-info text-dark">Đã tiếp nhận</span>';
-                case 'processing':
-                    return '<span class="badge bg-primary text-white">Đang xử lý</span>';
-                case 'completed':
-                    return '<span class="badge bg-success text-white">Hoàn thành</span>';
-                case 'returned':
-                    return '<span class="badge bg-secondary text-white">Trả hồ sơ</span>';
-                default:
-                    return '<span class="badge bg-light text-dark">Không rõ</span>';
-            }
-        }
-
-        // Cập nhật theo id (khuyến nghị)
-        function updateRowStatusById(id, newStatus) {
-            const row = document.querySelector(`tr[data-id="${id}"]`);
-            if (!row) return;
-            const cell = row.querySelector('.status-cell');
-            if (cell) cell.innerHTML = statusBadgeHtml(newStatus);
-        }
-
-
-        // (Tuỳ chọn) Cập nhật theo queue_number nếu bạn muốn dùng queue
-        function updateRowStatusByQueue(queueNumber, newStatus) {
-            const row = document.querySelector(`tr[data-queue="${queueNumber}"]`);
-            if (!row) return;
-            const cell = row.querySelector('.status-cell');
-            if (cell) cell.innerHTML = statusBadgeHtml(newStatus);
-        }
-
-        // Lắng nghe socket kênh 'status' và event '.status.updated'
         echo.channel('laravel_database_status')
             .listen('.status.updated', (e) => {
-                // e: { id, queue_number, new_status, ... }
-                updateRowStatusById(e.id, e.new_status);
-                // hoặc:
-                // updateRowStatusByQueue(e.queue_number, e.new_status);
+                upsertRow(e);
             });
     </script>
 
 </body>
+
 </html>
