@@ -102,9 +102,10 @@ class ServiceRegistrationController extends Controller
         $registration->save();
 
         StatusUpdated::dispatch([
-            'status' => 'online',
-            'message' => 'Dashboard vừa cập nhật.',
-            'at' => now()->toDateTimeString(),
+            'id'           => $registration->id,
+            'queue_number' => $registration->queue_number,
+            'new_status'   => $registration->status, // pending/received/processing/completed/returned
+            'updated_at'   => now()->toDateTimeString(),
         ]);
         return response()->json([
             'success' => true,
