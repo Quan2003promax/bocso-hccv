@@ -25,16 +25,18 @@ class ServiceRegistration extends Model
 
     public function department()
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(Department::class, 'department_id', 'id');
     }
 
     public function getStatusTextAttribute()
     {
         $statuses = [
             'pending' => 'Chờ xử lý',
+            'received' => 'Đã tiếp nhận',
             'processing' => 'Đang xử lý',
             'completed' => 'Đã xử lý',
-            'cancelled' => 'Đã hủy'
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Trả hồ sơ'
         ];
 
         return $statuses[$this->status] ?? $this->status;

@@ -254,8 +254,11 @@
                                                         @case('completed')
                                                             <span class="badge bg-success text-white">Hoàn thành</span>
                                                             @break
-                                                        @default
-                                                            <span class="badge bg-secondary text-white">{{ $registration->status }}</span>
+                                                        @case('returned')
+                                                            <span class="badge bg-secondary text-white">Trả hồ sơ</span>
+                                                            @break
+                                                        @default 
+                                                            
                                                     @endswitch
                                                 </td>
                                             </tr>

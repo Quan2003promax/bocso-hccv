@@ -113,6 +113,12 @@
                                         @case('cancelled')
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Đã hủy</span>
                                             @break
+                                        @case('received')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-red-800">Đã tiếp nhận</span>
+                                            @break
+                                        @case('returned')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Trả hồ sơ</span>
+                                            @break
                                     @endswitch
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
