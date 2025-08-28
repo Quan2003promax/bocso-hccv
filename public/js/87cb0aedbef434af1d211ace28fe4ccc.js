@@ -40,6 +40,16 @@ echo.channel('laravel_database_status')
                 row.addEventListener('animationend', () => row.remove(), { once: true });
             }
         }
+    })
+    .listen('.status.deleted', (e) => {
+        const tbody = document.querySelector(`#queue-tbody-${e.department_id}`);
+        if (!tbody) return;
+
+        const row = tbody.querySelector(`tr[data-id="${e.id}"]`);
+        if (row) {
+            row.classList.add('fade-out');
+            row.addEventListener('animationend', () => row.remove(), { once: true });
+        }
     });
 
 function statusBadgeHtml(status) {

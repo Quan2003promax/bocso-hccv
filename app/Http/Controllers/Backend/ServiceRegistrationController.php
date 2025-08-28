@@ -7,6 +7,7 @@ use App\Models\ServiceRegistration;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Events\StatusUpdated;
+use App\Events\DeleteRegistration;
 use Illuminate\Support\Str;
 
 class ServiceRegistrationController extends Controller
@@ -111,7 +112,10 @@ class ServiceRegistrationController extends Controller
     {
         $registration = \App\Models\ServiceRegistration::findOrFail($id);
         $registration->delete();
-
+        DeleteRegistration::dispatch([
+            'id'            => $registration->id,
+            'department_id' => $registration->department_id, 
+        ]);
         return redirect()->back()->with('success', 'Xóa thành công!');
     }
 
