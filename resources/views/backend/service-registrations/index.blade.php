@@ -56,6 +56,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SĐT</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng ban</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CCCD/CMND</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tài liệu</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian đăng ký</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
@@ -64,26 +65,27 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($registrations as $registration)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $registration->id }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ $registration->queue_number }}</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $registration->full_name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <a href="mailto:{{ $registration->email }}" class="text-blue-600 hover:text-blue-800">
-                                            {{ $registration->email }}
-                                        </a>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <a href="tel:{{ $registration->phone }}" class="text-blue-600 hover:text-blue-800">
-                                            {{ $registration->phone }}
-                                        </a>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $registration->id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ $registration->queue_number }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $registration->full_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <a href="mailto:{{ $registration->email }}" class="text-blue-600 hover:text-blue-800">
+                                        {{ $registration->email }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <a href="tel:{{ $registration->phone }}" class="text-blue-600 hover:text-blue-800">
+                                        {{ $registration->phone }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->identity_number }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         @if($registration->document_file)
-                                            <a href="{{ Storage::url($registration->document_file) }}" 
+                                           <a href="{{ Storage::url($registration->document_file) }}"
                                                target="_blank" 
                                                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
                                                 <i class="fas fa-file-download me-1"></i>
@@ -95,39 +97,6 @@
                                             <span class="text-gray-400">Không có</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
-                                                data-registration-id="{{ $registration->id }}">
-                                            <option value="pending" {{ $registration->status == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-                                            <option value="received" {{ $registration->status == 'received' ? 'selected' : '' }}>Đã tiếp nhận</option>
-                                            <option value="processing" {{ $registration->status == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                                            <option value="completed" {{ $registration->status == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                                            <option value="returned" {{ $registration->status == 'returned' ? 'selected' : '' }}>Trả hồ sơ</option>
-                                        </select>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="{{ route('admin.service-registrations.show', $registration) }}" 
-                                           class="text-blue-600 hover:text-blue-900 me-3">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <form action="{{ route('admin.service-registrations.destroy', $registration) }}" 
-                                              method="POST" class="inline delete-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 delete-btn">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $registration->id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ $registration->queue_number }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $registration->full_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -298,32 +267,62 @@
     //     transports: ['websocket', 'polling'],
     // });
 
-    function makeDashboardRow(item) {
-        return `
+    function truncate(str, maxLength = 20) {
+    return (str && str.length > maxLength) ? str.substring(0, maxLength - 3) + '...' : (str || 'Không có');
+}
+
+function makeDashboardRow(item) {
+    const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+
+    return `
     <tr class="hover:bg-gray-50" data-id="${item.id}">
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.id}</td>
         <td class="px-6 py-4 whitespace-nowrap">
-            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">${item.queue_number}</span>
+            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                ${item.queue_number}
+            </span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.full_name}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <a href="mailto:${item.email}" class="text-blue-600 hover:text-blue-800">${item.email}</a>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <a href="tel:${item.phone}" class="text-blue-600 hover:text-blue-800">${item.phone}</a>
+        </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.department}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.created_at}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.identity_number || '-'}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${
+                item.document_file
+                ? `
+                <a href="/storage/${item.document_file}" target="_blank"
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
+                    <i class="fas fa-file-download me-1"></i>
+                    ${truncate(item.document_original_name)}
+                </a>
+                <br>
+                <small class="text-gray-400">${item.formatted_file_size || ''}</small>
+                `
+                : '<span class="text-gray-400">Không có</span>'
+            }
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.at}</td>
         <td class="px-6 py-4 whitespace-nowrap">
             <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 data-registration-id="${item.id}">
-                <option value="pending"   ${item.status==='pending'?'selected':''}>Chờ xử lý</option>
-                <option value="received"  ${item.status==='received'?'selected':''}>Đã tiếp nhận</option>
-                <option value="processing"${item.status==='processing'?'selected':''}>Đang xử lý</option>
-                <option value="completed" ${item.status==='completed'?'selected':''}>Hoàn thành</option>
-                <option value="returned"  ${item.status==='returned'?'selected':''}>Trả hồ sơ</option>
+                <option value="pending"    ${item.new_status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
+                <option value="received"   ${item.new_status === 'received' ? 'selected' : ''}>Đã tiếp nhận</option>
+                <option value="processing" ${item.new_status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
+                <option value="completed"  ${item.new_status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
+                <option value="returned"   ${item.new_status === 'returned' ? 'selected' : ''}>Trả hồ sơ</option>
             </select>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <a href="${item.show_url}" class="text-blue-600 hover:text-blue-900 me-3">
+            <a href="/admin/service-registrations/${item.id}" class="text-blue-600 hover:text-blue-900 me-3">
                 <i class="fas fa-eye"></i>
             </a>
-            <form action="${item.delete_url}" method="POST" class="inline delete-form">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+            <form action="/admin/service-registrations/${item.id}" method="POST" class="inline delete-form">
+                <input type="hidden" name="_token" value="${csrfToken}">
                 <input type="hidden" name="_method" value="DELETE">
                 <button type="submit" class="text-red-600 hover:text-red-900 delete-btn">
                     <i class="fas fa-trash"></i>
@@ -331,7 +330,9 @@
             </form>
         </td>
     </tr>`;
-    }
+}
+
+
 
     echo.channel('laravel_database_registrations')
         .listen('.registration.created', (e) => {
