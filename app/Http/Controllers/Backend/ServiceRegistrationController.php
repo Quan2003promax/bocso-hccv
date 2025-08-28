@@ -93,12 +93,12 @@ class ServiceRegistrationController extends Controller
         $registration->save();
 
         StatusUpdated::dispatch([
-            'id'            => $registration->id,
-            'queue_number'  => $registration->queue_number,
-            'new_status'    => $registration->status,              // pending/received/...
-            'full_name'     => $registration->full_name,
-            'department'    => $registration->department->name,
-            'created_at'    => $registration->created_at->format('H:i d/m/Y'),
+            'id'           => $registration->id,
+            'queue_number' => $registration->queue_number,
+            'full_name'    => $registration->full_name,
+            'department'   => $registration->department->name,
+            'department_id' => $registration->department_id, 
+            'new_status'   => $registration->status,
         ]);
 
         return response()->json([

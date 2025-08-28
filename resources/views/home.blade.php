@@ -251,22 +251,22 @@
                                         <label for="email" class="form-label">
                                             <i class="fas fa-envelope me-2"></i>Email <span class="text-danger">*</span>
                                         </label>
-                                        <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                               id="email" name="email" value="{{ old('email') }}" 
-                                               placeholder="example@email.com" required>
+                                        <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                            id="email" name="email" value="{{ old('email') }}"
+                                            placeholder="example@email.com" required>
                                         @error('email')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="phone" class="form-label">
                                             <i class="fas fa-phone me-2"></i>Số điện thoại <span class="text-danger">*</span>
                                         </label>
-                                        <input type="tel" class="form-control @error('phone') is-invalid @enderror" 
-                                               id="phone" name="phone" value="{{ old('phone') }}" 
-                                               placeholder="0123456789" required>
+                                        <input type="tel" class="form-control @error('phone') is-invalid @enderror"
+                                            id="phone" name="phone" value="{{ old('phone') }}"
+                                            placeholder="0123456789" required>
                                         @error('phone')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
@@ -275,9 +275,9 @@
                                         <label for="document_file" class="form-label">
                                             <i class="fas fa-file-upload me-2"></i>Tài liệu đính kèm
                                         </label>
-                                        <input type="file" class="form-control @error('document_file') is-invalid @enderror" 
-                                               id="document_file" name="document_file" 
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif">
+                                        <input type="file" class="form-control @error('document_file') is-invalid @enderror"
+                                            id="document_file" name="document_file"
+                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif">
                                         <div class="form-text">
                                             <small class="text-muted">
                                                 <i class="fas fa-info-circle me-1"></i>
@@ -285,7 +285,7 @@
                                             </small>
                                         </div>
                                         @error('document_file')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 d-flex align-items-end">
@@ -318,68 +318,57 @@
                         <div class="card-body p-0">
                             <div class="row">
                                 @foreach($departments as $department)
-                                    <div class="col-md-4 mb-4">
-                                        <div class="department-queue">
-                                            <h5 class="text-center mb-3 p-2 bg-light border rounded">
-                                                <i class="fas fa-building me-2"></i>
-                                                {{ $department->name }}
-                                            </h5>
-                                            <div class="table-responsive">
-                                                <table class="table table-sm table-hover mb-0">
-                                                    <thead class="table-light">
-                                                        <tr>
-                                                            <th class="text-center" style="width: 30%">Số thứ tự</th>
-                                                            <th style="width: 40%">Họ tên</th>
-                                                            <th class="text-center" style="width: 30%">Trạng thái</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="queue-tbody">
-                                                        @php
-                                                            $departmentRegistrations = $pendingRegistrations->where('department_id', $department->id);
-                                                        @endphp
-                                                        @forelse($departmentRegistrations as $registration)
-                                                            <tr>
-                                                                <td class="text-center">
-                                                                    <span class="badge bg-primary fs-6">{{ $registration->queue_number }}</span>
-                                                                </td>
-                                                                <td class="text-truncate" title="{{ $registration->full_name }}">
-                                                                    {{ Str::limit($registration->full_name, 15) }}
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    @switch($registration->status)
-                                                                        @case('pending')
-                                                                            <span class="badge bg-warning text-dark">Chờ xử lý</span>
-                                                                            @break
-                                                                        @case('received')
-                                                                            <span class="badge bg-info text-dark">Đã tiếp nhận</span>
-                                                                            @break
-                                                                        @case('processing')
-                                                                            <span class="badge bg-primary text-white">Đang xử lý</span>
-                                                                            @break
-                                                                        @case('completed')
-                                                                            <span class="badge bg-success text-white">Hoàn thành</span>
-                                                                            @break
-                                                                        @case('returned')
-                                                                            <span class="badge bg-secondary text-white">Trả hồ sơ</span>
-                                                                            @break
-                                                                        @default 
-                                                                            <span class="badge bg-secondary text-white">Không xác định</span>
-                                                                    @endswitch
-                                                                </td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="3" class="text-center py-3 text-muted">
-                                                                    <i class="fas fa-inbox fa-lg mb-2"></i>
-                                                                    <br><small>Chưa có đăng ký</small>
-                                                                </td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="department-queue">
+                                        <h5 class="text-center mb-3 p-2 bg-light border rounded">
+                                            <i class="fas fa-building me-2"></i>
+                                            {{ $department->name }}
+                                        </h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="text-center" style="width: 30%">Số thứ tự</th>
+                                                        <th style="width: 40%">Họ tên</th>
+                                                        <th class="text-center" style="width: 30%">Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="queue-tbody-{{ $department->id }}" data-department-id="{{ $department->id }}">
+                                                    @php
+                                                    $departmentRegistrations = $pendingRegistrations->where('department_id', $department->id);
+                                                    @endphp
+                                                    @forelse($departmentRegistrations as $registration)
+                                                    <tr data-id="{{ $registration->id }}">
+                                                        <td class="text-center">
+                                                            <span class="badge bg-primary fs-6">{{ $registration->queue_number }}</span>
+                                                        </td>
+                                                        <td class="text-truncate" title="{{ $registration->full_name }}">
+                                                            {{ Str::limit($registration->full_name, 15) }}
+                                                        </td>
+                                                        <td class="text-center status-cell">
+                                                            @switch($registration->status)
+                                                            @case('pending') <span class="badge bg-warning text-dark">Chờ xử lý</span> @break
+                                                            @case('received') <span class="badge bg-info text-dark">Đã tiếp nhận</span> @break
+                                                            @case('processing') <span class="badge bg-primary text-white">Đang xử lý</span> @break
+                                                            @case('completed') <span class="badge bg-success text-white">Hoàn thành</span> @break
+                                                            @case('returned') <span class="badge bg-secondary text-white">Trả hồ sơ</span> @break
+                                                            @default <span class="badge bg-secondary text-white">Không xác định</span>
+                                                            @endswitch
+                                                        </td>
+                                                    </tr>
+                                                    @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center py-3 text-muted">
+                                                            <i class="fas fa-inbox fa-lg mb-2"></i>
+                                                            <br><small>Chưa có đăng ký</small>
+                                                        </td>
+                                                    </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
+                                </div>
                                 @endforeach
                             </div>
                         </div>
@@ -418,12 +407,12 @@
     </script>
     <script src="{{ asset('js/87cb0aedbef434af1d211ace28fe4ccc.js') }}"></script>
 
-    <script>
+    <!-- <script>
         echo.channel('laravel_database_status')
             .listen('.status.updated', (e) => {
                 upsertRow(e);
             });
-    </script>
+    </script> -->
 
 </body>
 

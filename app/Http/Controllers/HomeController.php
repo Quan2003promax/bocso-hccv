@@ -87,18 +87,25 @@ class HomeController extends Controller
                 'registration_id' => $registration->id,
                 'has_file' => !empty($documentData)
             ]);
-            
+
             //fire event
             RegistrationCreated::dispatch([
-                'id'           => $registration->id,
-                'queue_number' => $registration->queue_number,
-                'full_name'    => $registration->full_name,
-                'department'   => $registration->department->name,
-                'created_at'   => $registration->created_at->format('H:i d/m/Y'),
-                'status'       => $registration->status,
-                'show_url'     => route('admin.service-registrations.show', $registration),
-                'delete_url'   => route('admin.service-registrations.destroy', $registration),
+                'id'             => $registration->id,
+                'queue_number'   => $registration->queue_number,
+                'full_name'      => $registration->full_name,
+                'birth_year'     => $registration->birth_year,
+                'identity_number' => $registration->identity_number,
+                'email'          => $registration->email,
+                'phone'          => $registration->phone,
+                'document_file'  => $registration->document_file, // lưu ý: tên file
+                'department_id'  => $registration->department_id,
+                'department'     => $registration->department->name,
+                'document_original_name' => $registration->document_original_name,
+                'document_mime_type' => $registration->document_mime_type,
+                'new_status'     => $registration->status,
+                'at'             => now()->toDateTimeString()
             ]);
+
             \Log::info('Đăng ký thành công:', ['queue_number' => $queueNumber, 'registration_id' => $registration->id]);
 
             return redirect()->back()
@@ -161,7 +168,6 @@ class HomeController extends Controller
 
         // Tạo tên file an toàn
         $safeFileName = time() . '_' . Str::random(10) . '_' . Str::slug($originalName);
-        
         // Lưu file vào storage
         $path = $file->storeAs('documents', $safeFileName, 'public');
 
