@@ -87,7 +87,7 @@ class HomeController extends Controller
                 'registration_id' => $registration->id,
                 'has_file' => !empty($documentData)
             ]);
-            ]);
+            
             //fire event
             RegistrationCreated::dispatch([
                 'id'           => $registration->id,
