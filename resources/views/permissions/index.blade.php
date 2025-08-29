@@ -5,12 +5,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Vai trò</h1>
+            <h1>Quyền</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-              <li class="breadcrumb-item active">Vai trò</li>
+              <li class="breadcrumb-item active">Quyền</li>
             </ol>
           </div>
         </div>
@@ -23,7 +23,7 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Danh sách các quyền</h3>
+              <h3 class="card-title">Danh sách quyền</h3>
               <div class="card-tools">
                 <button type="button" class="btn btn-success btn-create" data-toggle="modal" data-target="#PermissionModal">
                 <i class="fas fa-plus-square"></i> Thêm quyền
@@ -35,19 +35,12 @@
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
                 <tr class="bg-blue">
-                    <th width="50px">STT</th>
+                    <th width="30px"></th>
                     <th>Tên</th>
                     <th width="150px">Thao tác</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                  <td>Trident</td>
-                  <td>Internet
-                    Explorer 4.0
-                  </td>
-                  <th>Platform(s)</th>
-                </tr>
                 </tbody>
                 <tfoot>
                 </tfoot>
@@ -69,7 +62,7 @@
                 <form method="POST" action="" id="permissionForm">
                 @csrf
                 <div class="modal-header">
-                    <h4 class="modal-title">Thêm vai trò</h4>
+                    <h4 class="modal-title">Thêm quyền</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
                     <span aria-hidden="true">&times;</span>
                     </button>
@@ -78,7 +71,7 @@
                     <input type="hidden" name="_method" id="permission_method" value="POST">
                     <input type="hidden" name="id" id="id" value="">
                     <div class="form-group">
-                        <label for="name" class="col-sm-2 control-label">Tên</label>
+                        <label for="name" class="col-sm-2 control-label">Tên quyền</label>
                         <div class="col-sm-12">
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" placeholder="Điền tên" value="" required>
                             @error('name')
@@ -102,7 +95,7 @@
 <script src="{{ asset('backend/plugins/jquery/jquery.min.js') }}"></script>
 <script>
   $(function () {
-    $("#example1").DataTable({
+    var table = $("#example1").DataTable({
       "paging": true,
       "lengthChange": true,
       "searching": true,
@@ -113,8 +106,9 @@
       "language": {
                 "url": "{{ asset('backend/json/jsondatatable.json') }}"
        },
-        "ajax": {
-                'dataSrc': 'permissions'
+       "ajax": {
+           url: "{{ route('permissions.index') }}",
+           dataSrc: 'permissions'
        },
        'columns':[
                 {
@@ -140,7 +134,7 @@
     //Plus detail
     $('#example1 tbody').on('click', 'td.dt-control', function () {
         var tr = $(this).closest('tr');
-        var row = change.row( tr );
+        var row = table.row(tr);
 
         if ( row.child.isShown() ) {
             row.child.hide();
@@ -150,7 +144,7 @@
             row.child( format(row.data()) ).show();
             tr.addClass('shown');
         }
-    } );
+    });
     function format ( rowData ) {
             return '<table class="table table-bordered">'+
                 '<tr style="background: #f9f9f9">'+
@@ -167,38 +161,46 @@
                 '</tr>'+
                 '<tr>'+
                     '<td>Created at:</td>'+
-                    '<td>'+Date(rowData.created_at)+'</td>'+
+                    '<td>'+new Date(rowData.created_at).toLocaleString()+'</td>'+
                 '</tr>'+
             '</table>';
     };
     //create
-        $('#example1').on('click', '.btn-create', function (e) {
+        $('.btn-create').on('click', function (e) {
             e.preventDefault;
             var url = '{{ route("permissions.store") }}';
-            $('.modal-title').html("Tạo vai trò");
+            $('.modal-title').html("Thêm quyền");
             $('#permissionForm').attr('action', url);
             $('#permission_method').attr('value', 'POST');
             $('#id').val('');
+            $('#name').val('');
         });
         //edit
         $('#example1').on('click', '.btn-edit', function () {
             var permission_id = $(this).data('id');
             var url = '{{ route("permissions.update","") }}' +'/'+ permission_id;
-            $.ajax({
-                cache: false,
-                success: function(data){
-                    $('#PermissionModal').modal('show');
-                    $('.modal-title').html("Sửa vai trò");
-                    $.each(data.permissions, function(index, value) {
-                        if(value.id === permission_id){
-                            $('#id').val(permission_id);
-                            $('#name').val(value.name);
-                            $('#permissionForm').attr('action', url);
-                            $('#permission_method').attr('value', 'PATCH');
-                         }
-                    });
-                }
-            });
+            var rows = table.rows().data().toArray();
+            var found = rows.find(function(r){ return String(r.id) === String(permission_id); });
+            if(found){
+                $('#PermissionModal').modal('show');
+                $('.modal-title').html("Sửa quyền");
+                $('#id').val(permission_id);
+                $('#name').val(found.name);
+                $('#permissionForm').attr('action', url);
+                $('#permission_method').attr('value', 'PATCH');
+            } else {
+                $.get('{{ route("permissions.index") }}', function(data){
+                    var item = (data.permissions || []).find(function(v){ return String(v.id) === String(permission_id); });
+                    if(item){
+                        $('#PermissionModal').modal('show');
+                        $('.modal-title').html("Sửa quyền");
+                        $('#id').val(permission_id);
+                        $('#name').val(item.name);
+                        $('#permissionForm').attr('action', url);
+                        $('#permission_method').attr('value', 'PATCH');
+                    }
+                });
+            }
         });
 
 
@@ -225,7 +227,6 @@
 
             }).then((result) => {
                 if (result.value == true) {
-                    console.log(result.isConfirmed);
                     $.ajax({
                         url: url,
                         type: 'DELETE',
@@ -239,7 +240,7 @@
                                 "Dữ liệu đã được xóa vĩnh viễn.",
                                 "success"
                                 ).then(function(){
-                                    location.reload();
+                                    table.ajax.reload(null, false);
                                 });
                         },
                     });
