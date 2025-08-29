@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống bốc số thứ tự - Dịch vụ hành chính công</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -247,21 +248,25 @@
             background: rgba(1, 30, 65, .8) !important;
             border-bottom: 1px solid rgba(209, 214, 220, .6) !important;
         }
+
         .navbar {
-  position: relative;     /* tạo stacking context */
-  z-index: 3000;          /* cao hơn hero (1) và card (5) */
-}
+            position: relative;
+            /* tạo stacking context */
+            z-index: 3000;
+            /* cao hơn hero (1) và card (5) */
+        }
 
-/* Bản thân dropdown menu cũng có z-index cao */
-.navbar .dropdown-menu {
-  z-index: 4000 !important;
-}
+        /* Bản thân dropdown menu cũng có z-index cao */
+        .navbar .dropdown-menu {
+            z-index: 4000 !important;
+        }
 
-@media (min-width: 992px) {
-  .navbar-nav .dropdown-menu {
-    position: absolute !important;
-  }
-}
+        @media (min-width: 992px) {
+            .navbar-nav .dropdown-menu {
+                position: absolute !important;
+            }
+        }
+
         @media (max-width: 576px) {
             .hero-section+.queue-section {
                 margin-top: calc(var(--overlap) + 16px);
@@ -274,6 +279,39 @@
                     padding: 56px 0 64px;
                     margin-top: calc(var(--overlap, 0px) + 16px);
                 }
+            }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.8s forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(.95);
+                height: 0;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
     </style>
@@ -388,9 +426,10 @@
                                 </label>
                                 <input type="text" class="form-control @error('full_name') is-invalid @enderror"
                                     id="full_name" name="full_name" value="{{ old('full_name') }}" required>
-                                @error('full_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('full_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label for="birth_year" class="form-label">
                                     <i class="fas fa-calendar me-2"></i>Năm sinh <span class="text-danger">*</span>
@@ -398,10 +437,11 @@
                                 <input type="number" class="form-control @error('birth_year') is-invalid @enderror"
                                     id="birth_year" name="birth_year" value="{{ old('birth_year') }}"
                                     min="1900" max="{{ date('Y') + 1 }}" required>
-                                @error('birth_year') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('birth_year')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="identity_number" class="form-label">
@@ -409,9 +449,10 @@
                                 </label>
                                 <input type="text" class="form-control @error('identity_number') is-invalid @enderror"
                                     id="identity_number" name="identity_number" value="{{ old('identity_number') }}" required>
-                                @error('identity_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('identity_number')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label for="department_id" class="form-label">
                                     <i class="fas fa-building me-2"></i>Phòng ban <span class="text-danger">*</span>
@@ -425,10 +466,11 @@
                                     </option>
                                     @endforeach
                                 </select>
-                                @error('department_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('department_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label">
@@ -437,9 +479,10 @@
                                 <input type="email" class="form-control @error('email') is-invalid @enderror"
                                     id="email" name="email" value="{{ old('email') }}"
                                     placeholder="example@email.com" required>
-                                @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label for="phone" class="form-label">
                                     <i class="fas fa-phone me-2"></i>Số điện thoại <span class="text-danger">*</span>
@@ -447,10 +490,11 @@
                                 <input type="tel" class="form-control @error('phone') is-invalid @enderror"
                                     id="phone" name="phone" value="{{ old('phone') }}"
                                     placeholder="0123456789" required>
-                                @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="document_file" class="form-label">
@@ -465,12 +509,14 @@
                                         Hỗ trợ: PDF, DOC, DOCX, JPG, PNG, GIF. Kích thước tối đa: 128MB
                                     </small>
                                 </div>
-                                @error('document_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('document_file')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-
                             <div class="col-md-6 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary btn-lg px-5 w-100">
-                                    <i class="fas fa-paper-plane me-2"></i>Đăng ký dịch vụ
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Đăng ký dịch vụ
                                 </button>
                             </div>
                         </div>
@@ -478,183 +524,190 @@
                 </div>
             </div>
         </div>
-    </section>
-
-    <!-- Modal: Kết quả tìm kiếm số thứ tự -->
-    <div class="modal fade" id="queueResultModal" tabindex="-1" aria-labelledby="queueResultModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="queueResultModalLabel">Thông tin số thứ tự</h5>
-                    <div class="ms-auto d-flex align-items-center gap-2">
-                        <span id="queue-result-counter" class="text-muted small me-2 d-none">1/1</span>
-                        <button type="button" id="queue-result-prev" class="btn btn-outline-secondary btn-sm" title="Trước">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button type="button" id="queue-result-next" class="btn btn-outline-secondary btn-sm" title="Sau">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <div id="queue-result-loading" class="text-center d-none">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
+        </div>
+        </div>
+        </div>
+        <!-- Modal: Kết quả tìm kiếm số thứ tự -->
+        <div class="modal fade" id="queueResultModal" tabindex="-1" aria-labelledby="queueResultModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="queueResultModalLabel">Thông tin số thứ tự</h5>
+                        <div class="ms-auto d-flex align-items-center gap-2">
+                            <span id="queue-result-counter" class="text-muted small me-2 d-none">1/1</span>
+                            <button type="button" id="queue-result-prev" class="btn btn-outline-secondary btn-sm" title="Trước">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button type="button" id="queue-result-next" class="btn btn-outline-secondary btn-sm" title="Sau">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                     </div>
-                    <div id="queue-result-content" class="d-none"></div>
-                    <div id="queue-result-empty" class="text-muted text-center d-none">Không tìm thấy số thứ tự phù hợp</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <div class="modal-body">
+                        <div id="queue-result-loading" class="text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="queue-result-content" class="d-none"></div>
+                        <div id="queue-result-empty" class="text-muted text-center d-none">Không tìm thấy số thứ tự phù hợp</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Queue Section -->
-    <section class="queue-section">
-        <div class="container">
-            <!-- Title -->
-            <div class="section-head">
-                <h2>Danh sách số thứ tự đang chờ</h2>
-                <!-- <p class="sub">Cập nhật theo thời gian thực</p> nếu muốn thêm subtitle -->
-            </div>
-
-            <!-- Grid các phòng ban -->
-            <div class="row g-4">
-                @foreach($departments as $department)
-                <div class="col-md-6 col-lg-4">
-                    <div class="dept-card">
-                        <div class="dept-card__header">
-                            <i class="fas fa-building"></i>
-                            <span>{{ $department->name }}</span>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-sm align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-center" style="width:28%">Số</th>
-                                        <th style="width:42%">Họ tên</th>
-                                        <th class="text-center" style="width:30%">Trạng thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                    $departmentRegistrations = $pendingRegistrations->where('department_id', $department->id);
-                                    @endphp
-                                    @forelse($departmentRegistrations as $registration)
-                                    <tr>
-                                        <td class="text-center">
-                                            <span class="badge bg-primary rounded-pill px-3">{{ $registration->queue_number }}</span>
-                                        </td>
-                                        <td class="text-truncate" title="{{ $registration->full_name }}">
-                                            {{ Str::limit($registration->full_name, 18) }}
-                                        </td>
-                                        <td class="text-center">
-                                            @switch($registration->status)
-                                            @case('pending') <span class="badge bg-warning text-dark">Chờ xử lý</span> @break
-                                            @case('received') <span class="badge bg-info text-dark">Đã tiếp nhận</span> @break
-                                            @case('processing') <span class="badge bg-primary">Đang xử lý</span> @break
-                                            @case('completed') <span class="badge bg-success">Hoàn thành</span> @break
-                                            @case('returned') <span class="badge bg-secondary">Trả hồ sơ</span> @break
-                                            @default <span class="badge bg-secondary">N/A</span>
-                                            @endswitch
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center py-3 text-muted">
-                                            <i class="fas fa-inbox me-1"></i> Chưa có đăng ký
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+        <!-- Queue Section -->
+        <section class="queue-section">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card queue-card">
+                            <div class="card-header bg-success text-white text-center py-4">
+                                <h3 class="mb-0">
+                                    <i class="fas fa-list-ol me-2"></i>
+                                    Danh sách số thứ tự đang chờ
+                                </h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="row">
+                                    @foreach($departments as $department)
+                                    <div class="col-md-4 mb-4">
+                                        <div class="department-queue">
+                                            <h5 class="text-center mb-3 p-2 bg-light border rounded">
+                                                <i class="fas fa-building me-2"></i>
+                                                {{ $department->name }}
+                                            </h5>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th class="text-center" style="width: 30%">Số thứ tự</th>
+                                                            <th style="width: 40%">Họ tên</th>
+                                                            <th class="text-center" style="width: 30%">Trạng thái</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="queue-tbody-{{ $department->id }}" data-department-id="{{ $department->id }}">
+                                                        @php
+                                                        $departmentRegistrations = $pendingRegistrations->where('department_id', $department->id);
+                                                        @endphp
+                                                        @forelse($departmentRegistrations as $registration)
+                                                        <tr data-id="{{ $registration->id }}">
+                                                            <td class="text-center">
+                                                                <span class="badge bg-primary fs-6">{{ $registration->queue_number }}</span>
+                                                            </td>
+                                                            <td class="text-truncate" title="{{ $registration->full_name }}">
+                                                                {{ Str::limit($registration->full_name, 15) }}
+                                                            </td>
+                                                            <td class="text-center status-cell">
+                                                                @switch($registration->status)
+                                                                @case('pending') <span class="badge bg-warning text-dark">Chờ xử lý</span> @break
+                                                                @case('received') <span class="badge bg-info text-dark">Đã tiếp nhận</span> @break
+                                                                @case('processing') <span class="badge bg-primary text-white">Đang xử lý</span> @break
+                                                                @case('completed') <span class="badge bg-success text-white">Hoàn thành</span> @break
+                                                                @case('returned') <span class="badge bg-secondary text-white">Trả hồ sơ</span> @break
+                                                                @default <span class="badge bg-secondary text-white">Không xác định</span>
+                                                                @endswitch
+                                                            </td>
+                                                        </tr>
+                                                        @empty
+                                                        <tr>
+                                                            <td colspan="3" class="text-center py-3 text-muted">
+                                                                <i class="fas fa-inbox fa-lg mb-2"></i>
+                                                                <br><small>Chưa có đăng ký</small>
+                                                            </td>
+                                                        </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                @endforeach
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-4">
-        <div class="container">
-            <p class="mb-0">&copy; © 2025 Thiết kế và xây dựng bởi VIETTECHKEY. All rights reserved.</p>
-        </div>
-    </footer>
+        <!-- Footer -->
+        <footer class="bg-dark text-white text-center py-4">
+            <div class="container">
+                <p class="mb-0">&copy; © 2025 Thiết kế và xây dựng bởi VIETTECHKEY. All rights reserved.</p>
+            </div>
+        </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Socket.IO v2 từ Echo server (phải chạy ở :6001) -->
-    <script src="http://localhost:6001/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Socket.IO v2 từ Echo server (phải chạy ở :6001) -->
+        <script src="http://localhost:6001/socket.io/socket.io.js"></script>
 
-    <!-- Laravel Echo IIFE -->
-    <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+        <!-- Laravel Echo IIFE -->
+        <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
 
-    <script>
-        // cho Echo dùng io toàn cục
-        window.io = io;
+        <script>
+            // cho Echo dùng io toàn cục
+            window.io = io;
 
-        // Một số bản IIFE expose constructor khác nhau, bắt tất cả:
-        const EchoCtor = (window.Echo && window.Echo.default) || window.Echo || window.LaravelEcho;
+            // Một số bản IIFE expose constructor khác nhau, bắt tất cả:
+            const EchoCtor = (window.Echo && window.Echo.default) || window.Echo || window.LaravelEcho;
 
-        const echo = new EchoCtor({
-            broadcaster: 'socket.io',
-            host: `${location.hostname}:6001`,
-            transports: ['websocket', 'polling'],
-        });
-    </script>
-    <script src="{{ asset('js/87cb0aedbef434af1d211ace28fe4ccc.js') }}"></script>
+            const echo = new EchoCtor({
+                broadcaster: 'socket.io',
+                host: `${location.hostname}:6001`,
+                transports: ['websocket', 'polling'],
+            });
+        </script>
+        <script src="{{ asset('js/87cb0aedbef434af1d211ace28fe4ccc.js') }}"></script>
 
-    <script>
+        <!-- <script>
         echo.channel('laravel_database_status')
             .listen('.status.updated', (e) => {
                 upsertRow(e);
             });
-    </script>
+    </script> -->
 
-    <script>
-        (function() {
-            const form = document.getElementById('queue-search-form');
-            const input = document.getElementById('queue-search-input');
-            const modalEl = document.getElementById('queueResultModal');
-            const modal = new bootstrap.Modal(modalEl);
-            const loadingEl = document.getElementById('queue-result-loading');
-            const contentEl = document.getElementById('queue-result-content');
-            const emptyEl = document.getElementById('queue-result-empty');
-            const prevBtn = document.getElementById('queue-result-prev');
-            const nextBtn = document.getElementById('queue-result-next');
-            const counterEl = document.getElementById('queue-result-counter');
+        <script>
+            (function() {
+                const form = document.getElementById('queue-search-form');
+                const input = document.getElementById('queue-search-input');
+                const modalEl = document.getElementById('queueResultModal');
+                const modal = new bootstrap.Modal(modalEl);
+                const loadingEl = document.getElementById('queue-result-loading');
+                const contentEl = document.getElementById('queue-result-content');
+                const emptyEl = document.getElementById('queue-result-empty');
+                const prevBtn = document.getElementById('queue-result-prev');
+                const nextBtn = document.getElementById('queue-result-next');
+                const counterEl = document.getElementById('queue-result-counter');
 
-            let results = [];
-            let currentIndex = 0;
+                let results = [];
+                let currentIndex = 0;
 
-            function statusBadge(status) {
-                switch (status) {
-                    case 'pending':
-                        return '<span class="badge bg-warning text-dark">Chờ xử lý</span>';
-                    case 'received':
-                        return '<span class="badge bg-info text-dark">Đã tiếp nhận</span>';
-                    case 'processing':
-                        return '<span class="badge bg-primary">Đang xử lý</span>';
-                    case 'completed':
-                        return '<span class="badge bg-success">Hoàn thành</span>';
-                    case 'returned':
-                        return '<span class="badge bg-secondary">Trả hồ sơ</span>';
-                    default:
-                        return '<span class="badge bg-light text-dark">N/A</span>';
+                function statusBadge(status) {
+                    switch (status) {
+                        case 'pending':
+                            return '<span class="badge bg-warning text-dark">Chờ xử lý</span>';
+                        case 'received':
+                            return '<span class="badge bg-info text-dark">Đã tiếp nhận</span>';
+                        case 'processing':
+                            return '<span class="badge bg-primary">Đang xử lý</span>';
+                        case 'completed':
+                            return '<span class="badge bg-success">Hoàn thành</span>';
+                        case 'returned':
+                            return '<span class="badge bg-secondary">Trả hồ sơ</span>';
+                        default:
+                            return '<span class="badge bg-light text-dark">N/A</span>';
+                    }
                 }
-            }
 
-            function render(index) {
-                if (!Array.isArray(results) || results.length === 0) return;
-                if (index < 0 || index >= results.length) return;
-                const d = results[index];
-                contentEl.innerHTML = `
+                function render(index) {
+                    if (!Array.isArray(results) || results.length === 0) return;
+                    if (index < 0 || index >= results.length) return;
+                    const d = results[index];
+                    contentEl.innerHTML = `
             <div class="d-flex align-items-center mb-3">
               <div class="display-6 fw-bold me-3 text-primary">#${(d.queue_number||'').toString()}</div>
               <div>
@@ -677,78 +730,78 @@
               </li>
             </ul>
           `;
-                contentEl.classList.remove('d-none');
-                counterEl.textContent = `${index + 1}/${results.length}`;
-                counterEl.classList.toggle('d-none', results.length <= 1);
-                prevBtn.disabled = (index === 0);
-                nextBtn.disabled = (index >= results.length - 1);
-            }
-
-            prevBtn?.addEventListener('click', function() {
-                if (currentIndex > 0) {
-                    currentIndex -= 1;
-                    render(currentIndex);
+                    contentEl.classList.remove('d-none');
+                    counterEl.textContent = `${index + 1}/${results.length}`;
+                    counterEl.classList.toggle('d-none', results.length <= 1);
+                    prevBtn.disabled = (index === 0);
+                    nextBtn.disabled = (index >= results.length - 1);
                 }
-            });
-            nextBtn?.addEventListener('click', function() {
-                if (currentIndex < results.length - 1) {
-                    currentIndex += 1;
-                    render(currentIndex);
-                }
-            });
 
-            if (!form) return;
-
-            form.addEventListener('submit', function(evt) {
-                // Chỉ bắt nếu người dùng nhập toàn là số (ưu tiên tìm theo Số thứ tự)
-                const query = (input.value || '').trim();
-                if (!query) return; // để mặc định reload trang nếu rỗng
-
-                // Luồng popup chỉ dùng khi người dùng muốn tìm đúng Số thứ tự
-                // Cho phép cả chuỗi số có 0 ở đầu (VD: 001, 012)
-                const isQueueNumber = /^[0-9]+$/.test(query);
-                if (!isQueueNumber) return; // fallback: vẫn gửi GET bình thường
-
-                evt.preventDefault();
-
-                // Reset modal state
-                contentEl.classList.add('d-none');
-                emptyEl.classList.add('d-none');
-                loadingEl.classList.remove('d-none');
-                contentEl.innerHTML = '';
-                results = [];
-                currentIndex = 0;
-                modal.show();
-
-                fetch(`{{ route('search.queue') }}` + `?search=` + encodeURIComponent(query), {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        loadingEl.classList.add('d-none');
-
-                        if (!data || data.found !== true) {
-                            emptyEl.classList.remove('d-none');
-                            return;
-                        }
-                        results = Array.isArray(data.items) ? data.items : [];
-                        if (results.length === 0) {
-                            emptyEl.classList.remove('d-none');
-                            return;
-                        }
-                        currentIndex = 0;
+                prevBtn?.addEventListener('click', function() {
+                    if (currentIndex > 0) {
+                        currentIndex -= 1;
                         render(currentIndex);
-                    })
-                    .catch(() => {
-                        loadingEl.classList.add('d-none');
-                        emptyEl.classList.remove('d-none');
-                    });
-            });
-        })();
-    </script>
+                    }
+                });
+                nextBtn?.addEventListener('click', function() {
+                    if (currentIndex < results.length - 1) {
+                        currentIndex += 1;
+                        render(currentIndex);
+                    }
+                });
+
+                if (!form) return;
+
+                form.addEventListener('submit', function(evt) {
+                    // Chỉ bắt nếu người dùng nhập toàn là số (ưu tiên tìm theo Số thứ tự)
+                    const query = (input.value || '').trim();
+                    if (!query) return; // để mặc định reload trang nếu rỗng
+
+                    // Luồng popup chỉ dùng khi người dùng muốn tìm đúng Số thứ tự
+                    // Cho phép cả chuỗi số có 0 ở đầu (VD: 001, 012)
+                    const isQueueNumber = /^[0-9]+$/.test(query);
+                    if (!isQueueNumber) return; // fallback: vẫn gửi GET bình thường
+
+                    evt.preventDefault();
+
+                    // Reset modal state
+                    contentEl.classList.add('d-none');
+                    emptyEl.classList.add('d-none');
+                    loadingEl.classList.remove('d-none');
+                    contentEl.innerHTML = '';
+                    results = [];
+                    currentIndex = 0;
+                    modal.show();
+
+                    fetch(`{{ route('search.queue') }}` + `?search=` + encodeURIComponent(query), {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            loadingEl.classList.add('d-none');
+
+                            if (!data || data.found !== true) {
+                                emptyEl.classList.remove('d-none');
+                                return;
+                            }
+                            results = Array.isArray(data.items) ? data.items : [];
+                            if (results.length === 0) {
+                                emptyEl.classList.remove('d-none');
+                                return;
+                            }
+                            currentIndex = 0;
+                            render(currentIndex);
+                        })
+                        .catch(() => {
+                            loadingEl.classList.add('d-none');
+                            emptyEl.classList.remove('d-none');
+                        });
+                });
+            })();
+        </script>
 
 </body>
 
