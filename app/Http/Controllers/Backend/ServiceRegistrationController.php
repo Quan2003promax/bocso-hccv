@@ -12,13 +12,50 @@ use Illuminate\Support\Str;
 
 class ServiceRegistrationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $registrations = ServiceRegistration::with('department')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = ServiceRegistration::with('department');
+        
+        // Filter theo phòng ban nếu có
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        // Filter theo trạng thái nếu có
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filter theo từ khóa tìm kiếm
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('queue_number', 'LIKE', "%{$search}%")
+                  ->orWhere('full_name', 'LIKE', "%{$search}%")
+                  ->orWhere('identity_number', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%")
+                  ->orWhereHas('department', function($subQuery) use ($search) {
+                      $subQuery->where('name', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+        
+        $registrations = $query->orderBy('created_at', 'desc')->paginate(20);
+        
+        // Lấy danh sách phòng ban để hiển thị trong filter
+        $departments = Department::where('status', 'active')->get();
+        
+        // Lấy danh sách trạng thái để hiển thị trong filter
+        $statuses = [
+            'pending' => 'Chờ xử lý',
+            'received' => 'Đã tiếp nhận',
+            'processing' => 'Đang xử lý',
+            'completed' => 'Hoàn thành',
+            'returned' => 'Trả hồ sơ'
+        ];
 
-        return view('backend.service-registrations.index', compact('registrations'));
+        return view('backend.service-registrations.index', compact('registrations', 'departments', 'statuses'));
     }
 
     public function store(Request $request)

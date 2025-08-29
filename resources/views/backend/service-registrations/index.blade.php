@@ -15,6 +15,43 @@
             transform: translateY(0) scale(1);
         }
     }
+
+    /* Filter styles */
+    .filter-section {
+        transition: all 0.3s ease;
+    }
+
+    .filter-section:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .filter-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .filter-button {
+        transition: all 0.2s ease;
+    }
+
+    .filter-button:hover {
+        transform: translateY(-1px);
+    }
+
+    .active-filters {
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 @section('content')
 <div class="py-12">
@@ -42,6 +79,100 @@
             </div>
         </div>
         @endif
+
+        <!-- Filters Section -->
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 filter-section">
+            <div class="p-6">
+                <h4 class="text-md font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-filter me-2"></i>
+                    Bộ lọc tìm kiếm
+                </h4>
+                <form method="GET" action="{{ route('admin.service-registrations.index') }}" 
+      class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+    
+    <!-- Search Box -->
+    <div style="padding-right: 10px;">
+        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
+        <input type="text" 
+               id="search" 
+               name="search" 
+               value="{{ request('search') }}"
+               placeholder="Số thứ tự, họ tên, CCCD..."
+               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
+    </div>
+    
+    <!-- Department Filter -->
+    <div style="padding-right: 10px;">
+        <label for="department_id" class="block text-sm font-medium text-gray-700 mb-2">Phòng ban</label>
+        <select id="department_id" 
+                name="department_id" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
+            <option value="">Tất cả phòng ban</option>
+            @foreach($departments as $department)
+                <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
+                    {{ $department->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    
+    <!-- Status Filter -->
+    <div style="padding-right: 10px;">
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+        <select id="status" 
+                name="status" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
+            <option value="">Tất cả trạng thái</option>
+            @foreach($statuses as $key => $status)
+                <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
+                    {{ $status }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex  space-x-2">
+        <button type="submit" 
+                class="flex items-center justify-center px-4 py-2 bg-blue-600 text-black rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 filter-button">
+            <i class="fas fa-search mr-2"></i>
+            Lọc
+        </button>
+        <a href="{{ route('admin.service-registrations.index') }}" 
+           class="flex items-center justify-center px-4 py-2 bg-gray-500 text-black rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 filter-button">
+            <i class="fas fa-times mr-2"></i>
+            Xóa lọc
+        </a>
+    </div>
+</form>
+
+
+                
+                <!-- Active Filters Display -->
+                @if(request('search') || request('department_id') || request('status'))
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md active-filters">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-600 me-2"></i>
+                        <span class="text-sm text-blue-800">
+                            Đang lọc: 
+                            @if(request('search'))
+                                <span class="font-medium">"{{ request('search') }}"</span>
+                            @endif
+                            @if(request('department_id'))
+                                @php $selectedDept = $departments->find(request('department_id')); @endphp
+                                @if($selectedDept)
+                                    <span class="font-medium">Phòng ban: {{ $selectedDept->name }}</span>
+                                @endif
+                            @endif
+                            @if(request('status'))
+                                <span class="font-medium">Trạng thái: {{ $statuses[request('status')] ?? request('status') }}</span>
+                                @endif
+                        </span>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
 
         <!-- Table -->
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -139,7 +270,7 @@
 
                 @if($registrations->hasPages())
                 <div class="mt-6 flex justify-center">
-                    {{ $registrations->links() }}
+                    {{ $registrations->appends(request()->query())->links() }}
                 </div>
                 @endif
             </div>
@@ -153,6 +284,34 @@
 <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit form khi thay đổi select
+        const departmentSelect = document.getElementById('department_id');
+        const statusSelect = document.getElementById('status');
+        
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        }
+        
+        if (statusSelect) {
+            statusSelect.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        }
+        
+        // Debounce search input
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    this.closest('form').submit();
+                }, 500);
+            });
+        }
+
         // Xử lý confirm delete với SweetAlert2
         document.querySelectorAll('.delete-form').forEach(function(form) {
             form.addEventListener('submit', function(e) {

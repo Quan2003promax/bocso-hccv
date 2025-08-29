@@ -12,9 +12,27 @@ use App\Jobs\ProcessDocumentUpload;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $departments = Department::where('status', 'active')->get();
+        
+        // Xử lý search theo số thứ tự
+        $searchQuery = $request->get('search');
+        $searchResults = collect();
+        
+        if ($searchQuery) {
+            $searchResults = ServiceRegistration::with('department')
+                ->where('queue_number', 'LIKE', "%{$searchQuery}%")
+                ->orWhere('full_name', 'LIKE', "%{$searchQuery}%")
+                ->orWhere('identity_number', 'LIKE', "%{$searchQuery}%")
+                ->orWhereHas('department', function($query) use ($searchQuery) {
+                    $query->where('name', 'LIKE', "%{$searchQuery}%");
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+        }
+        
         $pendingRegistrations = ServiceRegistration::with('department')
             // ->whereIn('status', ['pending', 'received','processing', 'completed', 'returned']) case full field status
             ->whereIn('status', ['pending', 'received', 'processing', 'returned']) // case short field status
@@ -23,7 +41,77 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
-        return view('home', compact('departments', 'pendingRegistrations'));
+        return view('home', compact('departments', 'pendingRegistrations', 'searchQuery', 'searchResults'));
+    }
+
+    public function search(Request $request)
+    {
+        $searchQuery = (string) $request->get('search');
+
+        // Với route search.queue, luôn trả JSON (phục vụ AJAX)
+        if ($request->routeIs('search.queue') || $request->expectsJson() || $request->ajax()) {
+            if (trim($searchQuery) === '') {
+                return response()->json([
+                    'found' => false,
+                    'message' => 'Vui lòng nhập số thứ tự'
+                ], 422);
+            }
+
+            $registrations = ServiceRegistration::with('department')
+                ->where('queue_number', trim($searchQuery))
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($registrations->isEmpty()) {
+                return response()->json([
+                    'found' => false,
+                    'message' => 'Không tìm thấy số thứ tự phù hợp'
+                ]);
+            }
+
+            $items = $registrations->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'queue_number' => $r->queue_number,
+                    'full_name' => $r->full_name,
+                    'identity_number' => $r->identity_number,
+                    'department' => optional($r->department)->name,
+                    'status' => $r->status,
+                    'created_at' => optional($r->created_at)->format('H:i d/m/Y'),
+                ];
+            })->values();
+
+            return response()->json([
+                'found' => true,
+                'total' => $items->count(),
+                'items' => $items,
+            ]);
+        }
+
+        // Fallback: non-AJAX search returns to home with results (kept for compatibility)
+        if (!$searchQuery) {
+            return redirect()->route('home');
+        }
+
+        $searchResults = ServiceRegistration::with('department')
+            ->where('queue_number', 'LIKE', "%{$searchQuery}%")
+            ->orWhere('full_name', 'LIKE', "%{$searchQuery}%")
+            ->orWhere('identity_number', 'LIKE', "%{$searchQuery}%")
+            ->orWhereHas('department', function($query) use ($searchQuery) {
+                $query->where('name', 'LIKE', "%{$searchQuery}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $departments = Department::where('status', 'active')->get();
+        $pendingRegistrations = ServiceRegistration::with('department')
+            ->whereIn('status', ['pending', 'received', 'processing', 'returned'])
+            ->orderByRaw("FIELD(status, 'pending', 'received','processing', 'completed', 'returned')")
+            ->orderBy('created_at', 'asc')
+            ->limit(10)
+            ->get();
+
+        return view('home', compact('departments', 'pendingRegistrations', 'searchQuery', 'searchResults'));
     }
 
     public function register(Request $request)

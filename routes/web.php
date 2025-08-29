@@ -19,6 +19,8 @@ use App\Http\Controllers\Backend\ServiceRegistrationController;
 
 // Trang chủ cho người dùng
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// Ajax search by queue number (Số thứ tự)
+Route::get('/search/queue', [HomeController::class, 'search'])->name('search.queue');
 Route::post('/service-register', [HomeController::class, 'register'])
     ->name('service.register')
     ->middleware('throttle.service.registration');

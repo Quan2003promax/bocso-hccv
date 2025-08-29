@@ -1,12 +1,13 @@
 /* Homepage style inspired by Boston Logan (Massport) */
 :root {
-    --bos-primary: #0a2a66;
+    --bos-primary: rgba(1, 30, 65, .8);
     --bos-primary-600: #123b86;
     --bos-accent: #ffb000;
     --bos-bg: #f6f8fb;
     --bos-text: #0f172a;
     --bos-muted: #475569;
     --bos-border: #e2e8f0;
+    --overlap: 60px;
 }
 
 html {
@@ -83,14 +84,24 @@ body {
 /* RESERVATION CARD (Registration form) */
 .form-section {
     background: var(--bos-bg);
-    padding: 48px 0;
+    padding: calc(var(--overlap) + 48px) 0 64px;
+    /* chừa thêm khoảng overlap */
+    position: relative;
+    z-index: 2;
+    margin-top: calc(-1 * var(--overlap));
+    /* kéo section lên */
 }
 
 .reservation-card {
     border: 1px solid var(--bos-border);
     border-radius: 18px;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, .08);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, .15);
     overflow: hidden;
+    background: #fff;
+    position: relative;
+    z-index: 5;
+    transform: translateY(calc(-1 * var(--overlap)));
+    /* Kéo card lên */
 }
 
 .reservation-card .card-header {
