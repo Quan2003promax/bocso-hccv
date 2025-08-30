@@ -20,6 +20,10 @@
                         <i class="fas fa-home me-2"></i>{{ __('Về trang chủ') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
+                        <i class="fas fa-user-shield me-2"></i>{{ __('Quản lý vai trò') }}
+                    </x-nav-link>
+
                     @role('admin')
                         <x-nav-link :href="route('admin.departments.index')" :active="request()->routeIs('admin.departments.*')">
                             <i class="fas fa-building me-2"></i>{{ __('Phòng ban') }}
@@ -27,6 +31,14 @@
 
                         <x-nav-link :href="route('admin.service-registrations.index')" :active="request()->routeIs('admin.service-registrations.*')">
                             <i class="fas fa-clipboard-list me-2"></i>{{ __('Đăng ký dịch vụ') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            <i class="fas fa-users me-2"></i>{{ __('Quản lý người dùng') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('permissions.index')" :active="request()->routeIs('permissions.*')">
+                            <i class="fas fa-key me-2"></i>{{ __('Quản lý quyền') }}
                         </x-nav-link>
                     @endrole
                 </div>
@@ -95,6 +107,10 @@
                 <i class="fas fa-home me-2"></i>{{ __('Về trang chủ') }}
             </x-responsive-nav-link>
 
+            <x-responsive-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
+                <i class="fas fa-user-shield me-2"></i>{{ __('Quản lý vai trò') }}
+            </x-responsive-nav-link>
+
             @role('admin')
                 <x-responsive-nav-link :href="route('admin.departments.index')" :active="request()->routeIs('admin.departments.*')">
                     <i class="fas fa-building me-2"></i>{{ __('Phòng ban') }}
@@ -102,6 +118,14 @@
 
                 <x-responsive-nav-link :href="route('admin.service-registrations.index')" :active="request()->routeIs('admin.service-registrations.*')">
                     <i class="fas fa-clipboard-list me-2"></i>{{ __('Đăng ký dịch vụ') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    <i class="fas fa-users me-2"></i>{{ __('Quản lý người dùng') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('permissions.index')" :active="request()->routeIs('permissions.*')">
+                    <i class="fas fa-key me-2"></i>{{ __('Quản lý quyền') }}
                 </x-responsive-nav-link>
             @endrole
         </div>

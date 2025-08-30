@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'throttle.service.registration' => \App\Http\Middleware\ThrottleServiceRegistration::class,
+        'check.department.permission' => \App\Http\Middleware\CheckDepartmentPermission::class,
     ];
 }

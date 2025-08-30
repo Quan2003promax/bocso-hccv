@@ -7,91 +7,69 @@ use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use PhpParser\Node\Stmt\TryCatch;
-
-
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class PermissionController extends Controller
 {
-
-    function __construct()
+    public function __construct()
     {
-
-         $this->middleware('role:Super-Admin');
+        $this->middleware('auth');
+        $this->middleware('permission:permission-list|permission-create|permission-edit|permission-delete', ['only' => ['index', 'show']]);
+        $this->middleware('permission:permission-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:permission-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:permission-delete', ['only' => ['destroy']]);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\View\View
-     */
     public function index(Request $request)
     {
-        $permissions = Permission::all();
+        $permissions = Permission::orderBy('name')->get();
+        
         if ($request->ajax()) {
             return response()->json([
                 'permissions' => $permissions,
             ]);
         }
-        return view('permissions.index')->with(compact('permissions'));
-
+        
+        return view('permissions.index', compact('permissions'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\View\View
-     */
     public function create()
     {
-        return redirect()->route('permissions.index');
+        return view('permissions.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
     public function store(Request $request)
     {
-
         $this->validate($request, [
-            'name' => 'required|unique:permissions',
+            'name' => 'required|unique:permissions,name',
+            'guard_name' => 'nullable|string'
         ]);
-        Permission::Create(
-            [
+
+        try {
+            Permission::create([
                 'name' => $request->name,
-            ]
-        );
+                'guard_name' => $request->guard_name ?? 'web'
+            ]);
 
-        $notification = array(
-            'message' => 'Quyền được thêm thành công',
-            'alert-type' => 'success'
-        );
-
-        return redirect()->route('permissions.index')
-                        ->with($notification);
-
+            return redirect()->route('permissions.index')
+                            ->with('success', 'Quyền được thêm thành công');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Có lỗi xảy ra khi tạo quyền: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     *
-     * @return \Illuminate\View\View
-     */
     public function show($id)
     {
-         return redirect()->route('permissions.index');
+        $permission = Permission::with('roles')->findOrFail($id);
+        return view('permissions.show', compact('permission'));
     }
 
     public function edit($id)
     {
-        return redirect()->route('permissions.index');
+        $permission = Permission::findOrFail($id);
+        return view('permissions.edit', compact('permission'));
     }
 
     public function update(Request $request, $id)
@@ -99,29 +77,53 @@ class PermissionController extends Controller
         $this->validate($request, [
             'name' => [
                 'required',
-                Rule::unique('permissions','name')->ignore($id)
-            ]
+                Rule::unique('permissions', 'name')->ignore($id)
+            ],
+            'guard_name' => 'nullable|string'
         ]);
-        $permission = Permission::find($id);
-        $permission->name = $request->name;
-        $permission->save();
 
-        return redirect()->route('permissions.index')
-                        ->with('success','Quyền được cập nhật thành công');
+        try {
+            $permission = Permission::findOrFail($id);
+            $permission->name = $request->name;
+            if ($request->has('guard_name')) {
+                $permission->guard_name = $request->guard_name;
+            }
+            $permission->save();
+
+            return redirect()->route('permissions.index')
+                            ->with('success', 'Quyền được cập nhật thành công');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Có lỗi xảy ra khi cập nhật quyền: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
-        DB::table("permissions")->where('id',$id)->delete();
-        return response()->json([
-            'message' => 'Thao tác hoàn thành!'
-          ]);
-        //  $notification = array(
-        //     'message' => 'Permissions deleted successfully',
-        //     'alert-type' => 'success'
-        // );
-        // return redirect()->route('permissions.index')
-        //                 ->with($notification);
+        try {
+            $permission = Permission::findOrFail($id);
+            
+            // Kiểm tra xem quyền có đang được sử dụng bởi role nào không
+            $rolesUsingPermission = $permission->roles()->count();
+            if ($rolesUsingPermission > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xóa quyền này vì đang được sử dụng bởi ' . $rolesUsingPermission . ' vai trò!'
+                ]);
+            }
 
+            $permission->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Quyền đã được xóa thành công!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi xóa quyền: ' . $e->getMessage()
+            ]);
+        }
     }
 }

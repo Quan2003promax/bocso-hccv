@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ExampleController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\ServiceRegistrationController;
 
@@ -43,7 +44,18 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
+    
+    // Routes demo middleware mới
+    Route::prefix('example')->name('example.')->group(function () {
+        Route::get('/', [ExampleController::class, 'index'])->name('index');
+        Route::get('/{id}/edit', [ExampleController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ExampleController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ExampleController::class, 'destroy'])->name('destroy');
+        Route::get('/hr-only', [ExampleController::class, 'hrOnly'])->name('hr-only');
+        Route::get('/check-permissions', [ExampleController::class, 'checkPermissions'])->name('check-permissions');
+    });
 });
+
 // Admin routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('departments', DepartmentController::class);
@@ -54,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
     ->name('registrations.destroy');
 });
+
 // routes/web.php
 Route::get('/test-status', function () {
     \App\Events\StatusUpdated::dispatch([
