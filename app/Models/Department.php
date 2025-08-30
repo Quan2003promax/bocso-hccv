@@ -19,4 +19,9 @@ class Department extends Model
     {
         return $this->hasMany(ServiceRegistration::class);
     }
+    
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'department_user');
+    }
 }
