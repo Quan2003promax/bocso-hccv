@@ -43,8 +43,10 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    
     public function departments()
     {
-        return $this->belongsToMany(Department::class, 'department_user');
+        return $this->belongsToMany(Department::class, 'user_department', 'user_id', 'department_id')
+                    ->withTimestamps();
     }
 }
