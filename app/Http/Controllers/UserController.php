@@ -25,9 +25,9 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $users = User::with(['roles', 'permissions', 'department'])
-                    ->orderBy('id', 'DESC')
-                    ->paginate(10);
+        $users = User::with(['roles', 'permissions', 'departments'])
+            ->orderBy('id', 'DESC')
+            ->paginate(10);
 
         return view('users.index', compact('users'));
     }
@@ -54,10 +54,10 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'confirm-password' => 'required|same:password',
             'roles' => 'required|array',
-            'department_id' => 'nullable|exists:departments,id',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'exists:permissions,id'
+            'departments' => 'nullable|array',
+            'departments.*' => 'exists:departments,id',
         ]);
+        //  dd($request->all());
 
         try {
             DB::beginTransaction();
@@ -77,21 +77,25 @@ class UserController extends Controller
                 $user->givePermissionTo($permissions);
             }
 
+            // Gán phòng ban (N-N)
+            if ($request->has('department_ids')) {
+                $user->departments()->sync($request->input('department_ids'));
+            }
+
+
             DB::commit();
 
             return redirect()->route('users.index')
-                            ->with('success', 'Người dùng được tạo thành công');
+                ->with('success', 'Người dùng được tạo thành công');
         } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->back()
-                            ->withInput()
-                            ->with('error', 'Có lỗi xảy ra khi tạo người dùng: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
     public function show($id)
     {
-        $user = User::with(['roles', 'permissions', 'department'])->findOrFail($id);
+        $user = User::with(['roles', 'permissions', 'departments'])->findOrFail($id);
         return view('users.show', compact('user'));
     }
 
@@ -101,7 +105,7 @@ class UserController extends Controller
         
         if ($user->hasRole('Super-Admin')) {
             return redirect()->route('users.index')
-                            ->with('error', 'Bạn không có quyền chỉnh sửa người dùng này');
+                ->with('error', 'Bạn không có quyền chỉnh sửa người dùng này');
         }
 
         if (auth()->user()->hasRole('Super-Admin')) {
@@ -127,7 +131,8 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|same:confirm-password',
             'confirm-password' => 'nullable|required_with:password|same:password',
             'roles' => 'required|array',
-            'department_id' => 'nullable|exists:departments,id',
+            'department_ids' => 'nullable|array',
+            'department_ids.*' => 'exists:departments,id',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id'
         ]);
@@ -139,15 +144,14 @@ class UserController extends Controller
             if (!empty($input['password'])) {
                 $input['password'] = Hash::make($input['password']);
             } else {
-                $input = Arr::except($input, array('password'));
+                $input = Arr::except($input, ['password']);
             }
 
             $user = User::findOrFail($id);
             $user->update($input);
 
             // Cập nhật vai trò
-            DB::table('model_has_roles')->where('model_id', $id)->delete();
-            $user->assignRole($request->input('roles'));
+            $user->syncRoles($request->input('roles'));
 
             // Cập nhật quyền trực tiếp
             $user->syncPermissions([]); // Xóa tất cả quyền trực tiếp
@@ -157,15 +161,22 @@ class UserController extends Controller
                 $user->givePermissionTo($permissions);
             }
 
+            // Cập nhật phòng ban (quan hệ n-n)
+            if ($request->has('department_ids')) {
+                $user->departments()->sync($request->input('department_ids'));
+            } else {
+                $user->departments()->detach(); // nếu không chọn phòng ban nào thì xóa hết
+            }
+
             DB::commit();
 
             return redirect()->route('users.index')
-                            ->with('success', 'Người dùng được cập nhật thành công');
+                ->with('success', 'Người dùng được cập nhật thành công');
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return redirect()->back()
-                            ->withInput()
-                            ->with('error', 'Có lỗi xảy ra khi cập nhật người dùng: ' . $e->getMessage());
+                ->withInput()
+                ->with('error', 'Có lỗi xảy ra khi cập nhật người dùng: ' . $e->getMessage());
         }
     }
 
@@ -175,21 +186,21 @@ class UserController extends Controller
         
         if (auth()->id() == $id) {
             return redirect()->route('users.index')
-                            ->with('error', 'Bạn không thể xóa chính bạn');
+                ->with('error', 'Bạn không thể xóa chính bạn');
         }
-        
+
         if ($user->hasRole('Super-Admin')) {
             return redirect()->route('users.index')
-                            ->with('error', 'Bạn không có quyền xóa người dùng này');
+                ->with('error', 'Bạn không có quyền xóa người dùng này');
         }
 
         try {
             $user->delete();
             return redirect()->route('users.index')
-                            ->with('success', 'Người dùng được xóa thành công');
+                ->with('success', 'Người dùng được xóa thành công');
         } catch (\Exception $e) {
             return redirect()->route('users.index')
-                            ->with('error', 'Có lỗi xảy ra khi xóa người dùng: ' . $e->getMessage());
+                ->with('error', 'Có lỗi xảy ra khi xóa người dùng: ' . $e->getMessage());
         }
     }
 }

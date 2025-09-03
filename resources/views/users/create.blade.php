@@ -33,8 +33,36 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Phòng ban</label>
-          {!! Form::select('department_id', ['' => 'Chọn phòng ban'] + $departments, null, ['class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500']) !!}
-          <p class="text-red-600 text-sm mt-1">{{ $errors->first('department_id') }}</p>
+
+          {{-- Nút chọn tất cả --}}
+          <div class="mb-2">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="checkAllDepartments" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+              <span class="font-semibold text-sm text-blue-600"> Chọn tất cả</span>
+            </label>
+          </div>
+
+          <div class="mt-2 space-y-2" id="departmentCheckboxes">
+            @foreach($departments as $id => $name)
+            <label class="flex items-center space-x-2">
+              {!! Form::checkbox(
+              'department_ids[]',
+              $id,
+              in_array(
+              $id,
+              old(
+              'department_ids',
+              isset($user) ? $user->departments->pluck('id')->toArray() : []
+              )
+              ),
+              ['class' => 'department-item rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500']
+              ) !!}
+              <span>{{ $name }}</span>
+            </label>
+            @endforeach
+          </div>
+
+          <p class="text-red-600 text-sm mt-1">{{ $errors->first('department_ids') }}</p>
         </div>
         <div class="md:col-span-2">
           <label class="block text-sm font-medium text-gray-700">Vai trò <span class="text-red-500">*</span></label>
@@ -42,30 +70,6 @@
           <p class="text-red-600 text-sm mt-1">{{ $errors->first('roles') }}</p>
         </div>
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700">Quyền trực tiếp (tùy chọn)</label>
-          <div class="mt-2 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-3">
-            @php
-              $permissionGroups = collect($permissions)->groupBy(function($permission) {
-                  return explode('-', $permission)[0] ?? 'other';
-              });
-            @endphp
-            
-            @foreach($permissionGroups as $groupName => $groupPermissions)
-              <div class="mb-3">
-                <h6 class="font-medium text-gray-700 mb-2 text-capitalize">{{ $groupName }}</h6>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  @foreach($groupPermissions as $permissionId => $permissionName)
-                    <label class="inline-flex items-center">
-                      <input type="checkbox" name="permissions[]" value="{{ $permissionId }}" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                      <span class="ml-2 text-sm text-gray-700">{{ $permissionName }}</span>
-                    </label>
-                  @endforeach
-                </div>
-              </div>
-            @endforeach
-          </div>
-          <p class="text-red-600 text-sm mt-1">{{ $errors->first('permissions') }}</p>
-          <p class="text-gray-500 text-sm mt-1">Quyền trực tiếp sẽ được gán ngoài quyền từ vai trò</p>
         </div>
       </div>
       <div class="mt-6 text-right">

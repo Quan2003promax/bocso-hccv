@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('permissions', PermissionController::class);
     
     // Routes demo middleware mới
-    Route::prefix('example')->name('example.')->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [ExampleController::class, 'index'])->name('index');
         Route::get('/{id}/edit', [ExampleController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ExampleController::class, 'update'])->name('update');
@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin routes
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('departments', DepartmentController::class);
     Route::resource('service-registrations', ServiceRegistrationController::class)->except(['edit', 'update']);
     Route::post('service-registrations', [ServiceRegistrationController::class, 'store'])->name('service-registrations.store');
