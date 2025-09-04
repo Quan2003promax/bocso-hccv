@@ -8,6 +8,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ExampleController;
 use App\Http\Controllers\Backend\DepartmentController;
 use App\Http\Controllers\Backend\ServiceRegistrationController;
+use App\Http\Controllers\DocumentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +66,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     ->name('service-registrations.update-status');
     Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
     ->name('registrations.destroy');
+    
+    // Document routes
+    Route::get('documents/{id}/view', [DocumentController::class, 'view'])->name('documents.view');
+    Route::get('documents/{id}/info', [DocumentController::class, 'getFileInfo'])->name('documents.info');
+    Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
+    
+    // Public file access route (không cần auth)
+    Route::get('documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('documents.serve');
 });
 
 // routes/web.php
@@ -75,6 +84,30 @@ Route::get('/test-status', function () {
         'at' => now()->toDateTimeString(),
     ]);
     return 'Broadcasted';
+});
+
+// Test route để kiểm tra file access
+Route::get('/test-file-access', function () {
+    $filename = '1756527701_iqaNf2AuTU_phieu-dang-ky-thuc-tapdocx';
+    $filePath = 'documents/' . $filename;
+    
+    if (!Storage::disk('public')->exists($filePath)) {
+        return 'File không tồn tại';
+    }
+    
+    $fullPath = Storage::disk('public')->path($filePath);
+    $mimeType = mime_content_type($fullPath);
+    $fileSize = filesize($fullPath);
+    
+    return [
+        'file_exists' => true,
+        'filename' => $filename,
+        'mime_type' => $mimeType,
+        'file_size' => $fileSize,
+        'storage_path' => $fullPath,
+        'public_url' => Storage::url($filePath),
+        'serve_url' => url(route('admin.documents.serve', ['filename' => $filename]))
+    ];
 });
 
 require __DIR__ . '/auth.php';

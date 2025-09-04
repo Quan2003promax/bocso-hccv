@@ -51,7 +51,20 @@
                 <!-- Bên trái -->
                 <p class="mb-2 md:mb-0">
                     © 2025 <span class="font-semibold text-gray-700">VIETTECHKEY</span>.
-                    <span class="italic text-gray-500">Thiết kế & phát triển bởi Phạm Huy Hoàng</span>
+                    <span class="italic text-gray-500">
+  Thiết kế &amp; phát triển bởi&nbsp;
+  Phạm Huy Hoàng
+  <span style="display:inline-block; vertical-align:middle; ">
+    <sup style="font-size:10px; color:#6b7280;">Lộc Đăng Bách</sup><br>
+    <sub style="font-size:10px; color:#6b7280;">Trương Anh Quân</sub>
+  </span>
+</span>
+
+
+
+
+
+
                 </p>
 
                 <!-- Bên phải -->
