@@ -23,4 +23,7 @@ php artisan cache:clear
 #run connect redis
 laravel-echo-server start
 
+#install convert doc/docx -> PDF
+composer require phpoffice/phpword
+composer require dompdf/dompdf
 

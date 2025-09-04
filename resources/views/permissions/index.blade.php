@@ -5,12 +5,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Vai trò</h1>
+            <h1>Quản lý quyền</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-              <li class="breadcrumb-item active">Vai trò</li>
+              <li class="breadcrumb-item active">Quản lý quyền</li>
             </ol>
           </div>
         </div>
@@ -23,31 +23,27 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Danh sách các quyền</h3>
+              <h3 class="card-title">Danh sách quyền</h3>
               <div class="card-tools">
-                <button type="button" class="btn btn-success btn-create" data-toggle="modal" data-target="#PermissionModal">
-                <i class="fas fa-plus-square"></i> Thêm quyền
-                </button>
+                @can('permission-create')
+                    <button type="button" class="btn btn-success btn-create" data-toggle="modal" data-target="#PermissionModal">
+                        <i class="fas fa-plus-square"></i> Thêm quyền
+                    </button>
+                @endcan
             </div>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
-                <tr class="bg-blue">
-                    <th width="50px">STT</th>
-                    <th>Tên</th>
-                    <th width="150px">Thao tác</th>
+                <tr class="bg-primary">
+                    <th width="30px"></th>
+                    <th>Tên quyền</th>
+                    <th>Guard Name</th>
+                    <th width="200px">Thao tác</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                  <td>Trident</td>
-                  <td>Internet
-                    Explorer 4.0
-                  </td>
-                  <th>Platform(s)</th>
-                </tr>
                 </tbody>
                 <tfoot>
                 </tfoot>
@@ -69,7 +65,7 @@
                 <form method="POST" action="" id="permissionForm">
                 @csrf
                 <div class="modal-header">
-                    <h4 class="modal-title">Thêm vai trò</h4>
+                    <h4 class="modal-title">Thêm quyền</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
                     <span aria-hidden="true">&times;</span>
                     </button>
@@ -78,12 +74,18 @@
                     <input type="hidden" name="_method" id="permission_method" value="POST">
                     <input type="hidden" name="id" id="id" value="">
                     <div class="form-group">
-                        <label for="name" class="col-sm-2 control-label">Tên</label>
+                        <label for="name" class="col-sm-2 control-label">Tên quyền</label>
                         <div class="col-sm-12">
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" placeholder="Điền tên" value="" required>
                             @error('name')
                                 <p class="mt-2 mb-0 error text-danger">{{ $message }}</p>
                             @enderror
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="guard_name" class="col-sm-2 control-label">Guard Name</label>
+                        <div class="col-sm-12">
+                            <input type="text" class="form-control" id="guard_name" name="guard_name" placeholder="web" value="web">
                         </div>
                     </div>
                 </div>
@@ -96,13 +98,13 @@
             <!-- /.modal-content -->
         </div>
         <!-- /.modal-dialog -->
-
+    </div>
     </section>
     <!-- /.content -->
 <script src="{{ asset('backend/plugins/jquery/jquery.min.js') }}"></script>
 <script>
   $(function () {
-    $("#example1").DataTable({
+    var table = $("#example1").DataTable({
       "paging": true,
       "lengthChange": true,
       "searching": true,
@@ -113,8 +115,9 @@
       "language": {
                 "url": "{{ asset('backend/json/jsondatatable.json') }}"
        },
-        "ajax": {
-                'dataSrc': 'permissions'
+       "ajax": {
+           url: "{{ route('permissions.index') }}",
+           dataSrc: 'permissions'
        },
        'columns':[
                 {
@@ -124,11 +127,18 @@
                     defaultContent: '<i class="nav-icon far fa-circle text-info"></i>'
                 },
                 { data: 'name' },
+                { data: 'guard_name' },
                 { data: 'id',
                     orderable: false,
                     render: function(data){
-                        return '<button class="btn btn-sm btn-info btn-edit mr-1" data-id="'+data+'">Sửa</button>'+
-                                '<button class="btn btn-sm btn-danger btn-delete" data-id="'+data+'">Xóa</button>';
+                        var buttons = '';
+                        @can('permission-edit')
+                            buttons += '<button class="btn btn-sm btn-info btn-edit mr-1" data-id="'+data+'">Sửa</button>';
+                        @endcan
+                        @can('permission-delete')
+                            buttons += '<button class="btn btn-sm btn-danger btn-delete" data-id="'+data+'">Xóa</button>';
+                        @endcan
+                        return buttons;
                     }
                 }
         ],
@@ -140,7 +150,7 @@
     //Plus detail
     $('#example1 tbody').on('click', 'td.dt-control', function () {
         var tr = $(this).closest('tr');
-        var row = change.row( tr );
+        var row = table.row(tr);
 
         if ( row.child.isShown() ) {
             row.child.hide();
@@ -150,7 +160,7 @@
             row.child( format(row.data()) ).show();
             tr.addClass('shown');
         }
-    } );
+    });
     function format ( rowData ) {
             return '<table class="table table-bordered">'+
                 '<tr style="background: #f9f9f9">'+
@@ -166,39 +176,54 @@
                     '<td>'+rowData.name+'</td>'+
                 '</tr>'+
                 '<tr>'+
+                    '<td>Guard Name:</td>'+
+                    '<td>'+rowData.guard_name+'</td>'+
+                '</tr>'+
+                '<tr>'+
                     '<td>Created at:</td>'+
-                    '<td>'+Date(rowData.created_at)+'</td>'+
+                    '<td>'+new Date(rowData.created_at).toLocaleString()+'</td>'+
                 '</tr>'+
             '</table>';
     };
     //create
-        $('#example1').on('click', '.btn-create', function (e) {
+        $('.btn-create').on('click', function (e) {
             e.preventDefault;
             var url = '{{ route("permissions.store") }}';
-            $('.modal-title').html("Tạo vai trò");
+            $('.modal-title').html("Thêm quyền");
             $('#permissionForm').attr('action', url);
             $('#permission_method').attr('value', 'POST');
             $('#id').val('');
+            $('#name').val('');
+            $('#guard_name').val('web');
         });
         //edit
         $('#example1').on('click', '.btn-edit', function () {
             var permission_id = $(this).data('id');
             var url = '{{ route("permissions.update","") }}' +'/'+ permission_id;
-            $.ajax({
-                cache: false,
-                success: function(data){
-                    $('#PermissionModal').modal('show');
-                    $('.modal-title').html("Sửa vai trò");
-                    $.each(data.permissions, function(index, value) {
-                        if(value.id === permission_id){
-                            $('#id').val(permission_id);
-                            $('#name').val(value.name);
-                            $('#permissionForm').attr('action', url);
-                            $('#permission_method').attr('value', 'PATCH');
-                         }
-                    });
-                }
-            });
+            var rows = table.rows().data().toArray();
+            var found = rows.find(function(r){ return String(r.id) === String(permission_id); });
+            if(found){
+                $('#PermissionModal').modal('show');
+                $('.modal-title').html("Sửa quyền");
+                $('#id').val(permission_id);
+                $('#name').val(found.name);
+                $('#guard_name').val(found.guard_name);
+                $('#permissionForm').attr('action', url);
+                $('#permission_method').attr('value', 'PATCH');
+            } else {
+                $.get('{{ route("permissions.index") }}', function(data){
+                    var item = (data.permissions || []).find(function(v){ return String(v.id) === String(permission_id); });
+                    if(item){
+                        $('#PermissionModal').modal('show');
+                        $('.modal-title').html("Sửa quyền");
+                        $('#id').val(permission_id);
+                        $('#name').val(item.name);
+                        $('#guard_name').val(item.guard_name);
+                        $('#permissionForm').attr('action', url);
+                        $('#permission_method').attr('value', 'PATCH');
+                    }
+                });
+            }
         });
 
 
@@ -225,7 +250,6 @@
 
             }).then((result) => {
                 if (result.value == true) {
-                    console.log(result.isConfirmed);
                     $.ajax({
                         url: url,
                         type: 'DELETE',
@@ -234,14 +258,29 @@
                             _token:'{{ csrf_token() }}',
                         },
                         success: function (response){
-                            Swal.fire(
-                                "Đã xóa!",
-                                "Dữ liệu đã được xóa vĩnh viễn.",
-                                "success"
+                            if(response.success) {
+                                Swal.fire(
+                                    "Đã xóa!",
+                                    response.message,
+                                    "success"
                                 ).then(function(){
-                                    location.reload();
+                                    table.ajax.reload(null, false);
                                 });
+                            } else {
+                                Swal.fire(
+                                    "Lỗi!",
+                                    response.message,
+                                    "error"
+                                );
+                            }
                         },
+                        error: function() {
+                            Swal.fire(
+                                "Lỗi!",
+                                "Có lỗi xảy ra khi xóa quyền",
+                                "error"
+                            );
+                        }
                     });
                 }else{
                     Swal.fire('Dữ liệu được bảo toàn', '', 'info')

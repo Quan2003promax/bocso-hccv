@@ -87,6 +87,30 @@
                                     <div class="text-sm text-gray-500">Cập nhật lần cuối</div>
                                     <div class="mt-1">{{ $registration->updated_at->format('H:i d/m/Y') }}</div>
                                 </div>
+                                @if($registration->document_file)
+                                    <div class="md:col-span-2">
+                                        <div class="text-sm text-gray-500">Tài liệu đính kèm</div>
+                                        <div class="mt-2">
+                                            <div class="flex items-center space-x-2">
+                                                <a href="{{ route('admin.documents.view', $registration->id) }}" 
+                                                   target="_blank"
+                                                   class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200" style="margin-right: 10px;">
+                                                    <i class="fas fa-eye mr-2"></i>
+                                                    Xem tài liệu
+                                                </a>
+                                                <a href="{{ Storage::url($registration->document_file) }}" 
+                                                   download="{{ $registration->document_original_name }}"
+                                                   class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-green-100 text-green-800 hover:bg-green-200">
+                                                    <i class="fas fa-download mr-2"></i>
+                                                    Tải về
+                                                </a>
+                                            </div>
+                                            <div class="mt-1 text-xs text-gray-500">
+                                                {{ $registration->document_original_name }} ({{ $registration->formatted_file_size }})
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                             @if($registration->notes)
                                 <div class="mt-4">
@@ -126,7 +150,8 @@
                                     <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập ghi chú (nếu có)">{{ $registration->notes }}</textarea>
                                 </div>
                                 <div class="mt-4 text-right">
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-black
+                                     hover:bg-blue-700">
                                         <i class="fas fa-save mr-2"></i>
                                         Cập nhật trạng thái
                                     </button>

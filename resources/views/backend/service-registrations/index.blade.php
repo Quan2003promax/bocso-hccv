@@ -87,86 +87,84 @@
                     <i class="fas fa-filter me-2"></i>
                     Bộ lọc tìm kiếm
                 </h4>
-                <form method="GET" action="{{ route('admin.service-registrations.index') }}" 
-      class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-    
-    <!-- Search Box -->
-    <div style="padding-right: 10px;">
-        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
-        <input type="text" 
-               id="search" 
-               name="search" 
-               value="{{ request('search') }}"
-               placeholder="Số thứ tự, họ tên, CCCD..."
-               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
-    </div>
-    
-    <!-- Department Filter -->
-    <div style="padding-right: 10px;">
-        <label for="department_id" class="block text-sm font-medium text-gray-700 mb-2">Phòng ban</label>
-        <select id="department_id" 
-                name="department_id" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
-            <option value="">Tất cả phòng ban</option>
-            @foreach($departments as $department)
-                <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
-                    {{ $department->name }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-    
-    <!-- Status Filter -->
-    <div style="padding-right: 10px;">
-        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
-        <select id="status" 
-                name="status" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
-            <option value="">Tất cả trạng thái</option>
-            @foreach($statuses as $key => $status)
-                <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
-                    {{ $status }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="flex  space-x-2">
-        <button type="submit" 
-                class="flex items-center justify-center px-4 py-2 bg-blue-600 text-black rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 filter-button">
-            <i class="fas fa-search mr-2"></i>
-            Lọc
-        </button>
-        <a href="{{ route('admin.service-registrations.index') }}" 
-           class="flex items-center justify-center px-4 py-2 bg-gray-500 text-black rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 filter-button">
-            <i class="fas fa-times mr-2"></i>
-            Xóa lọc
-        </a>
-    </div>
-</form>
+                <form method="GET" action="{{ route('admin.service-registrations.index') }}"
+                    class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 
+                    <!-- Search Box -->
+                    <div style="padding-right: 10px;">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
+                        <input type="text"
+                            id="search"
+                            name="search"
+                            value="{{ request('search') }}"
+                            placeholder="Số thứ tự, họ tên, CCCD..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
+                    </div>
 
-                
+                    <!-- Department Filter -->
+                    <div style="padding-right: 10px;">
+                        <label for="department_id" class="block text-sm font-medium text-gray-700 mb-2">Phòng ban</label>
+                        <select id="department_id"
+                            name="department_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
+                            <option value="">Tất cả phòng ban</option>
+                            @foreach($departments as $department)
+                            <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
+                                {{ $department->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div style="padding-right: 10px;">
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                        <select id="status"
+                            name="status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 filter-input">
+                            <option value="">Tất cả trạng thái</option>
+                            @foreach($statuses as $key => $status)
+                            <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
+                                {{ $status }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex  space-x-2">
+                        <button type="submit"
+                            class="flex items-center justify-center px-4 py-2 bg-blue-600 text-black rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 filter-button">
+                            <i class="fas fa-search mr-2"></i>
+                            Lọc
+                        </button>
+                        <a href="{{ route('admin.service-registrations.index') }}"
+                            class="flex items-center justify-center px-4 py-2 bg-gray-500 text-black rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 filter-button">
+                            <i class="fas fa-times mr-2"></i>
+                            Xóa lọc
+                        </a>
+                    </div>
+                </form>
+
                 <!-- Active Filters Display -->
                 @if(request('search') || request('department_id') || request('status'))
                 <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md active-filters">
                     <div class="flex items-center">
                         <i class="fas fa-info-circle text-blue-600 me-2"></i>
                         <span class="text-sm text-blue-800">
-                            Đang lọc: 
+                            Đang lọc:
                             @if(request('search'))
-                                <span class="font-medium">"{{ request('search') }}"</span>
+                            <span class="font-medium">"{{ request('search') }}"</span>
                             @endif
                             @if(request('department_id'))
-                                @php $selectedDept = $departments->find(request('department_id')); @endphp
-                                @if($selectedDept)
-                                    <span class="font-medium">Phòng ban: {{ $selectedDept->name }}</span>
-                                @endif
+                            @php $selectedDept = $departments->find(request('department_id')); @endphp
+                            @if($selectedDept)
+                            <span class="font-medium">Phòng ban: {{ $selectedDept->name }}</span>
+                            @endif
                             @endif
                             @if(request('status'))
-                                <span class="font-medium">Trạng thái: {{ $statuses[request('status')] ?? request('status') }}</span>
-                                @endif
+                            <span class="font-medium">Trạng thái: {{ $statuses[request('status')] ?? request('status') }}</span>
+                            @endif
                         </span>
                     </div>
                 </div>
@@ -215,19 +213,12 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->identity_number }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        @if($registration->document_file)
-                                           <a href="{{ Storage::url($registration->document_file) }}"
-                                               target="_blank" 
-                                               class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
-                                                <i class="fas fa-file-download me-1"></i>
-                                                {{ Str::limit($registration->document_original_name, 20) }}
-                                            </a>
-                                            <br>
-                                            <small class="text-gray-400">{{ $registration->formatted_file_size }}</small>
-                                        @else
-                                            <span class="text-gray-400">Không có</span>
-                                        @endif
-                                    </td>
+                                <a href="{{ route('admin.service-registrations.show', $registration->id) }}" 
+                                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Xem chi tiết
+                                    </a>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -240,10 +231,13 @@
                                     </select>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    @can('service-registration-edit')
                                     <a href="{{ route('admin.service-registrations.show', $registration) }}"
                                         class="text-blue-600 hover:text-blue-900 me-3">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    @endcan
+                                    @can('service-registration-delete')
                                     <form action="{{ route('admin.service-registrations.destroy', $registration) }}"
                                         method="POST" class="inline delete-form">
                                         @csrf
@@ -252,6 +246,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </td>
                             </tr>
                             @empty
@@ -287,19 +282,19 @@
         // Auto-submit form khi thay đổi select
         const departmentSelect = document.getElementById('department_id');
         const statusSelect = document.getElementById('status');
-        
+
         if (departmentSelect) {
             departmentSelect.addEventListener('change', function() {
                 this.closest('form').submit();
             });
         }
-        
+
         if (statusSelect) {
             statusSelect.addEventListener('change', function() {
                 this.closest('form').submit();
             });
         }
-        
+
         // Debounce search input
         const searchInput = document.getElementById('search');
         if (searchInput) {
@@ -427,13 +422,13 @@
     // });
 
     function truncate(str, maxLength = 20) {
-    return (str && str.length > maxLength) ? str.substring(0, maxLength - 3) + '...' : (str || 'Không có');
-}
+        return (str && str.length > maxLength) ? str.substring(0, maxLength - 3) + '...' : (str || 'Không có');
+    }
 
-function makeDashboardRow(item) {
-    const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+    function makeDashboardRow(item) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
 
-    return `
+        return `
     <tr class="hover:bg-gray-50" data-id="${item.id}">
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.id}</td>
         <td class="px-6 py-4 whitespace-nowrap">
@@ -454,13 +449,20 @@ function makeDashboardRow(item) {
             ${
                 item.document_file
                 ? `
-                <a href="/storage/${item.document_file}" target="_blank"
-                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
-                    <i class="fas fa-file-download me-1"></i>
-                    ${truncate(item.document_original_name)}
-                </a>
-                <br>
-                <small class="text-gray-400">${item.formatted_file_size || ''}</small>
+                <div class="flex flex-col space-y-1">
+                    <a href="/admin/documents/${item.id}/view" target="_blank"
+                        class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
+                        <i class="fas fa-eye me-1"></i>
+                        Xem tài liệu
+                    </a>
+                    <a href="/storage/${item.document_file}" download="${item.document_original_name}"
+                        class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
+                        <i class="fas fa-download me-1"></i>
+                        Tải về
+                    </a>
+                    <small class="text-gray-400">${truncate(item.document_original_name, 25)}</small>
+                    <small class="text-gray-400">${item.formatted_file_size || ''}</small>
+                </div>
                 `
                 : '<span class="text-gray-400">Không có</span>'
             }

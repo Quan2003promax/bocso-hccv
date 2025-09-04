@@ -22,7 +22,7 @@ class CreateAdminUserSeeder extends Seeder
         $user = User::create([
             'name' => 'Super Admin',
             'email' => 'anhvip96xz@gmail.com',
-            'password' => bcrypt('123456') // Password đơn giản hơn
+            'password' => bcrypt('123123') // Password đơn giản hơn
         ]);
 
         // Sử dụng role có sẵn hoặc tạo mới nếu chưa có
@@ -36,6 +36,6 @@ class CreateAdminUserSeeder extends Seeder
         
         echo "Đã tạo user admin thành công!\n";
         echo "Email: anhvip96xz@gmail.com\n";
-        echo "Password: 123456\n";
+        echo "Password: 123123\n";
     }
 }

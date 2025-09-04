@@ -20,7 +20,9 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng ban</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quyền trực tiếp</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
             </tr>
           </thead>
@@ -31,19 +33,47 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $user->name }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->email }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  @if($user->department)
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {{ $user->department->name }}
+                    </span>
+                  @else
+                    <span class="text-gray-400">Chưa phân công</span>
+                  @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   @if(!empty($user->getRoleNames()))
                     @foreach($user->getRoleNames() as $v)
                       <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 mr-1">{{ $v }}</span>
                     @endforeach
+                  @else
+                    <span class="text-gray-400">Chưa có vai trò</span>
+                  @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  @if($user->permissions->count() > 0)
+                    @foreach($user->permissions->take(2) as $permission)
+                      <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 mr-1">{{ $permission->name }}</span>
+                    @endforeach
+                    @if($user->permissions->count() > 2)
+                      <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">+{{ $user->permissions->count() - 2 }}</span>
+                    @endif
+                  @else
+                    <span class="text-gray-400">Chỉ quyền từ vai trò</span>
                   @endif
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <a class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-black rounded-md mr-2" href="{{ route('users.show',$user->id) }}" title="Xem chi tiết">
+                    <i class="fa fa-eye" aria-hidden="true"></i>
+                  </a>
                   @can('user-edit')
-                  <a class="inline-flex items-center px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-black rounded-md mr-2" href="{{ route('users.edit',$user->id) }}"><i class="fa fa-user" aria-hidden="true"></i></a>
+                  <a class="inline-flex items-center px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-black rounded-md mr-2" href="{{ route('users.edit',$user->id) }}" title="Sửa">
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                  </a>
                   @endcan
                   @can('user-delete')
                   {!! Form::open(['method' => 'DELETE','route' => ['users.destroy', $user->id],'style'=>'display:inline']) !!}
-                  <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-black rounded-md delete_confirm"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                  <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-black rounded-md delete_confirm" title="Xóa"><i class="fa fa-trash" aria-hidden="true"></i></button>
                   {!! Form::close() !!}
                   @endcan
                 </td>

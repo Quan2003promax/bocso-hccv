@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'department_id',
     ];
 
     /**
@@ -43,10 +44,30 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-    
+
+    /**
+     * Get the department that owns the user.
+     */
     public function departments()
     {
-        return $this->belongsToMany(Department::class, 'user_department', 'user_id', 'department_id')
-                    ->withTimestamps();
+        return $this->belongsToMany(Department::class, 'department_user', 'user_id', 'department_id');
+    }
+
+    /**
+     * Check if user has permission in specific department
+     */
+    public function hasPermissionInDepartment($permission, $departmentName = null)
+    {
+        if (!$departmentName) {
+            return $this->hasPermissionTo($permission);
+        }
+
+        return $this->hasPermissionTo($permission) &&
+            $this->departments->contains('name', $departmentName);
+    }
+
+    public function belongsToDepartment($departmentName)
+    {
+        return $this->departments->contains('name', $departmentName);
     }
 }

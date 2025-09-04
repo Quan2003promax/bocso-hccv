@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,9 +14,14 @@ class Department extends Model
         'status'
     ];
 
-    public function serviceRegistrations()
+    public function users()
     {
-        return $this->hasMany(ServiceRegistration::class);
+        return $this->belongsToMany(User::class, 'department_user', 'department_id', 'user_id');
+    }
+
+    public function isActive()
+    {
+        return $this->status === 'active';
     }
     
     public function users()
