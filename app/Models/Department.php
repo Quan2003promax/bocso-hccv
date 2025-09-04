@@ -23,10 +23,4 @@ class Department extends Model
     {
         return $this->status === 'active';
     }
-    
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'user_department', 'department_id', 'user_id')
-                    ->withTimestamps();
-    }
 }
