@@ -11,11 +11,13 @@
                         <i class="fas fa-building me-2"></i>
                         Quản lý phòng ban
                     </h3>
+                    @can('department-create')
                     <a href="{{ route('admin.departments.create') }}"
                         class="bg-blue-600 hover:bg-blue-700 text-black font-medium py-2 px-4 rounded-md transition duration-200">
                         <i class="fas fa-plus me-2"></i>
                         Thêm phòng ban
                     </a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -62,10 +64,13 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    @can('department-edit')
                                     <a href="{{ route('admin.departments.edit', $department) }}"
                                         class="text-blue-600 hover:text-blue-900 me-3">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcan
+                                    @can('department-delete')
                                     <form action="{{ route('admin.departments.destroy', $department) }}"
                                         method="POST" class="inline delete-form">
                                         @csrf
@@ -74,6 +79,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </td>
                             </tr>
                             @empty

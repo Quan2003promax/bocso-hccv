@@ -15,7 +15,7 @@
         </a>
       </div>
     </div>
-    
+
     <div class="p-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Thông tin cơ bản -->
@@ -48,41 +48,37 @@
         <!-- Phòng ban -->
         <div class="bg-gray-50 p-4 rounded-lg">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Phòng ban</h3>
-          @if($user->department)
-            <div class="space-y-3">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Tên phòng ban:</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $user->department->name }}</p>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Mô tả:</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $user->department->description ?? 'Không có mô tả' }}</p>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Trạng thái:</label>
-                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $user->department->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                  {{ $user->department->status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
-                </span>
-              </div>
+          @if($user->departments && $user->departments->isNotEmpty())
+          <div class="grid gap-3">
+            @foreach($user->departments as $department)
+            <div class="flex items-center justify-between p-3 border rounded-lg bg-gray-50 shadow-sm">
+              <span class="font-medium text-gray-800">{{ $department->name ?? 'Không có tên' }}</span>
+              <span class="px-3 py-1 text-xs font-semibold rounded-full 
+          {{ $department->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                {{ $department->status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+              </span>
             </div>
+            @endforeach
+          </div>
           @else
-            <p class="text-gray-500">Chưa được phân công phòng ban</p>
+          <p class="text-gray-500 italic">Chưa được phân công phòng ban</p>
           @endif
+
         </div>
 
         <!-- Vai trò -->
         <div class="bg-gray-50 p-4 rounded-lg">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Vai trò</h3>
           @if(!empty($user->getRoleNames()))
-            <div class="space-y-2">
-              @foreach($user->getRoleNames() as $role)
-                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
-                  {{ $role }}
-                </span>
-              @endforeach
-            </div>
+          <div class="space-y-2">
+            @foreach($user->getRoleNames() as $role)
+            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+              {{ $role }}
+            </span>
+            @endforeach
+          </div>
           @else
-            <p class="text-gray-500">Chưa được gán vai trò</p>
+          <p class="text-gray-500">Chưa được gán vai trò</p>
           @endif
         </div>
 
@@ -90,15 +86,15 @@
         <div class="bg-gray-50 p-4 rounded-lg">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Quyền trực tiếp</h3>
           @if($user->permissions->count() > 0)
-            <div class="space-y-2">
-              @foreach($user->permissions as $permission)
-                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-purple-100 text-purple-800">
-                  {{ $permission->name }}
-                </span>
-              @endforeach
-            </div>
+          <div class="space-y-2">
+            @foreach($user->permissions as $permission)
+            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-purple-100 text-purple-800">
+              {{ $permission->name }}
+            </span>
+            @endforeach
+          </div>
           @else
-            <p class="text-gray-500">Chỉ có quyền từ vai trò</p>
+          <p class="text-gray-500">Chỉ có quyền từ vai trò</p>
           @endif
         </div>
       </div>
@@ -107,18 +103,18 @@
       <div class="mt-6 bg-gray-50 p-4 rounded-lg">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Tổng hợp quyền (từ vai trò + trực tiếp)</h3>
         @php
-          $allPermissions = $user->getAllPermissions();
+        $allPermissions = $user->getAllPermissions();
         @endphp
         @if($allPermissions->count() > 0)
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            @foreach($allPermissions as $permission)
-              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                {{ $permission->name }}
-              </span>
-            @endforeach
-          </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          @foreach($allPermissions as $permission)
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+            {{ $permission->name }}
+          </span>
+          @endforeach
+        </div>
         @else
-          <p class="text-gray-500">Không có quyền nào</p>
+        <p class="text-gray-500">Không có quyền nào</p>
         @endif
       </div>
     </div>

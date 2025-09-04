@@ -12,40 +12,52 @@ use Illuminate\Support\Str;
 
 class ServiceRegistrationController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:service-registration-list|service-registration-create|service-registration-edit|service-registration-delete', ['only' => ['index', 'show']]);
+        $this->middleware('permission:service-registration-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:service-registration-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:service-registration-delete', ['only' => ['destroy']]);
+    }
     public function index(Request $request)
     {
-        $query = ServiceRegistration::with('department');
-        
+
+        $userDepartmentIds = auth()->user()->departments->pluck('id')->toArray();
+        $query = ServiceRegistration::with('department')
+            ->whereIn('department_id', $userDepartmentIds);
+
         // Filter theo phòng ban nếu có
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
         }
-        
+
         // Filter theo trạng thái nếu có
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
+
         // Filter theo từ khóa tìm kiếm
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('queue_number', 'LIKE', "%{$search}%")
-                  ->orWhere('full_name', 'LIKE', "%{$search}%")
-                  ->orWhere('identity_number', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%")
-                  ->orWhere('phone', 'LIKE', "%{$search}%")
-                  ->orWhereHas('department', function($subQuery) use ($search) {
-                      $subQuery->where('name', 'LIKE', "%{$search}%");
-                  });
+                    ->orWhere('full_name', 'LIKE', "%{$search}%")
+                    ->orWhere('identity_number', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhereHas('department', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'LIKE', "%{$search}%");
+                    });
             });
         }
-        
+
         $registrations = $query->orderBy('created_at', 'desc')->paginate(20);
-        
+
         // Lấy danh sách phòng ban để hiển thị trong filter
         $departments = Department::where('status', 'active')->get();
-        
+
         // Lấy danh sách trạng thái để hiển thị trong filter
         $statuses = [
             'pending' => 'Chờ xử lý',
@@ -135,7 +147,7 @@ class ServiceRegistrationController extends Controller
             'queue_number' => $registration->queue_number,
             'full_name'    => $registration->full_name,
             'department'   => $registration->department->name,
-            'department_id' => $registration->department_id, 
+            'department_id' => $registration->department_id,
             'new_status'   => $registration->status,
         ]);
 
@@ -151,7 +163,7 @@ class ServiceRegistrationController extends Controller
         $registration->delete();
         DeleteRegistration::dispatch([
             'id'            => $registration->id,
-            'department_id' => $registration->department_id, 
+            'department_id' => $registration->department_id,
         ]);
         return redirect()->back()->with('success', 'Xóa thành công!');
     }

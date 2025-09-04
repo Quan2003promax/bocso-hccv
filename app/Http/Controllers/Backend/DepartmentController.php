@@ -8,6 +8,15 @@ use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:department-list|department-create|department-edit|department-delete', ['only' => ['index', 'show']]);
+        $this->middleware('permission:department-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:department-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:department-delete', ['only' => ['destroy']]);
+    }
     public function index()
     {
         $departments = Department::orderBy('created_at', 'desc')->get();
