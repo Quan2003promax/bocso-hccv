@@ -140,7 +140,7 @@ class DocumentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Convert thành công',
-                'pdf_url' => Storage::url($pdfPath)
+                'pdf_url' => route('admin.documents.serve', ['path' => ltrim($pdfPath, '/')])
             ]);
             
         } catch (\Exception $e) {
