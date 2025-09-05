@@ -39,8 +39,8 @@ class DocumentController extends Controller
                 
                 if ($pdfPath) {
                     $fileInfo = $this->documentConverter->getFileInfo($registration);
-                    $filename = basename($pdfPath);
-                    $fileInfo['pdf_url'] = route('admin.documents.serve', ['filename' => $filename]);
+                    $path = ltrim($pdfPath, '/');
+                    $fileInfo['pdf_url'] = route('admin.documents.serve', ['path' => $path]);
                     $fileInfo['is_converted'] = true;
                     
                     \Log::info('Converted DOC/DOCX to PDF successfully', [
@@ -77,10 +77,14 @@ class DocumentController extends Controller
         
         // Đối với các file khác, kiểm tra xem có thể xem trực tiếp không
         $fileInfo = $this->documentConverter->getFileInfo($registration);
-        // Nếu là PDF/ảnh và đang nằm trong public storage, đảm bảo dùng route serve để có header inline
+        // Chuẩn hoá URL đi qua route serve để gắn header inline trong iframe
         if (!empty($fileInfo['pdf_url'])) {
-            $basename = basename(parse_url($fileInfo['pdf_url'], PHP_URL_PATH));
-            $fileInfo['pdf_url'] = route('admin.documents.serve', ['filename' => $basename]);
+            $path = ltrim(parse_url($fileInfo['pdf_url'], PHP_URL_PATH), '/');
+            $fileInfo['pdf_url'] = route('admin.documents.serve', ['path' => $path]);
+        }
+        if (!empty($fileInfo['view_url'])) {
+            $path = ltrim(parse_url($fileInfo['view_url'], PHP_URL_PATH), '/');
+            $fileInfo['view_url'] = route('admin.documents.serve', ['path' => $path]);
         }
         
         if (!$fileInfo['can_view']) {
@@ -150,9 +154,16 @@ class DocumentController extends Controller
     /**
      * Serve file publicly (không cần auth)
      */
-    public function serveFile($filename)
+    public function serveFile($path)
     {
-        $filePath = 'documents/' . $filename;
+        // Chuẩn hoá và bảo vệ đường dẫn
+        $filePath = ltrim($path, '/');
+        if (str_contains($filePath, '..')) {
+            abort(403, 'Đường dẫn không hợp lệ');
+        }
+        if (!str_starts_with($filePath, 'documents/')) {
+            abort(403, 'Chỉ cho phép truy cập thư mục documents');
+        }
         
         if (!Storage::disk('public')->exists($filePath)) {
             abort(404, 'File không tồn tại');

@@ -243,8 +243,9 @@ class DocumentConverterService
         }
 
         // Tạo URL đầy đủ đến file thông qua route public
-        $filename = basename($registration->document_file);
-        $fileUrl = url(route('admin.documents.serve', ['filename' => $filename]));
+        // Dùng path đầy đủ để route serve có thể truy xuất đúng file trong thư mục con
+        $path = ltrim($registration->document_file, '/');
+        $fileUrl = url(route('admin.documents.serve', ['path' => $path]));
         
         // Debug: Log URL để kiểm tra
         \Log::info('Google Docs Viewer URL generation', [
@@ -280,8 +281,8 @@ class DocumentConverterService
         }
 
         // Tạo URL đầy đủ đến file thông qua route public
-        $filename = basename($registration->document_file);
-        $fileUrl = url(route('admin.documents.serve', ['filename' => $filename]));
+        $path = ltrim($registration->document_file, '/');
+        $fileUrl = url(route('admin.documents.serve', ['path' => $path]));
         
         // Debug: Log URL để kiểm tra
         \Log::info('Office Online Viewer URL generation', [
@@ -340,7 +341,8 @@ class DocumentConverterService
 
         return [
             'can_view' => true,
-            'view_url' => Storage::url($viewablePath),
+            // Dùng route serve để gắn header inline, kể cả ảnh/PDF
+            'view_url' => url(route('admin.documents.serve', ['path' => ltrim($viewablePath, '/')])) ,
             'download_url' => Storage::url($registration->document_file),
             'original_name' => $registration->document_original_name,
             'file_size' => $registration->formatted_file_size,
