@@ -455,7 +455,7 @@
                         <i class="fas fa-eye me-1"></i>
                         Xem tài liệu
                     </a>
-                    <a href="/storage/${item.document_file}" download="${item.document_original_name}"
+                    <a href="/admin/documents/file/${item.document_file}" download="${item.document_original_name}"
                         class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
                         <i class="fas fa-download me-1"></i>
                         Tải về

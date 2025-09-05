@@ -243,7 +243,7 @@ class DocumentConverterService
         }
 
         // Tạo URL đầy đủ đến file thông qua route public
-        $filename = basename($registration->document_file);
+        $filename = ltrim(str_replace('documents/', '', $registration->document_file), '/');
         $fileUrl = url(route('admin.documents.serve', ['filename' => $filename]));
         
         // Debug: Log URL để kiểm tra
@@ -280,7 +280,7 @@ class DocumentConverterService
         }
 
         // Tạo URL đầy đủ đến file thông qua route public
-        $filename = basename($registration->document_file);
+        $filename = ltrim(str_replace('documents/', '', $registration->document_file), '/');
         $fileUrl = url(route('admin.documents.serve', ['filename' => $filename]));
         
         // Debug: Log URL để kiểm tra
@@ -319,7 +319,9 @@ class DocumentConverterService
             return [
                 'can_view' => true,
                 'view_url' => null, // Sẽ được set bởi controller
-                'download_url' => Storage::url($registration->document_file),
+                'download_url' => url(route('admin.documents.serve', [
+                    'filename' => ltrim(str_replace('documents/', '', $registration->document_file), '/')
+                ])),
                 'original_name' => $registration->document_original_name,
                 'file_size' => $registration->formatted_file_size,
                 'mime_type' => $registration->document_mime_type,
@@ -331,7 +333,9 @@ class DocumentConverterService
         if (!$viewablePath) {
             return [
                 'can_view' => false,
-                'download_url' => Storage::url($registration->document_file),
+                'download_url' => url(route('admin.documents.serve', [
+                    'filename' => ltrim(str_replace('documents/', '', $registration->document_file), '/')
+                ])),
                 'original_name' => $registration->document_original_name,
                 'file_size' => $registration->formatted_file_size,
                 'mime_type' => $registration->document_mime_type
@@ -340,8 +344,10 @@ class DocumentConverterService
 
         return [
             'can_view' => true,
-            'view_url' => Storage::url($viewablePath),
-            'download_url' => Storage::url($registration->document_file),
+            'view_url' => url(route('admin.documents.serve', ['filename' => ltrim(str_replace('documents/', '', $viewablePath), '/') ])),
+            'download_url' => url(route('admin.documents.serve', [
+                'filename' => ltrim(str_replace('documents/', '', $registration->document_file), '/')
+            ])),
             'original_name' => $registration->document_original_name,
             'file_size' => $registration->formatted_file_size,
             'mime_type' => $registration->document_mime_type,

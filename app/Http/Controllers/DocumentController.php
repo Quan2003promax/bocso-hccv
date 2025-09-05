@@ -39,7 +39,9 @@ class DocumentController extends Controller
                 
                 if ($pdfPath) {
                     $fileInfo = $this->documentConverter->getFileInfo($registration);
-                    $fileInfo['pdf_url'] = Storage::url($pdfPath);
+                    $fileInfo['pdf_url'] = url(route('admin.documents.serve', [
+                        'filename' => ltrim(str_replace('documents/', '', $pdfPath), '/')
+                    ]));
                     $fileInfo['is_converted'] = true;
                     
                     \Log::info('Converted DOC/DOCX to PDF successfully', [
@@ -155,8 +157,11 @@ class DocumentController extends Controller
         $fullPath = Storage::disk('public')->path($filePath);
         $mimeType = mime_content_type($fullPath);
         
+        // Ensure inline display for PDFs/images and allow embedding in iframes
         return response()->file($fullPath, [
             'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline',
+            'X-Frame-Options' => 'SAMEORIGIN',
             'Access-Control-Allow-Origin' => '*',
             'Access-Control-Allow-Methods' => 'GET, OPTIONS',
             'Access-Control-Allow-Headers' => 'Content-Type',

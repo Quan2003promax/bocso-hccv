@@ -72,9 +72,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('documents/{id}/info', [DocumentController::class, 'getFileInfo'])->name('documents.info');
     Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
     
-    // Public file access route (không cần auth)
-    Route::get('documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('documents.serve');
+    // (moved below) Public file access route: make this route accessible without auth
 });
+
+// Public file access route (không cần auth)
+Route::get('admin/documents/file/{filename}', [DocumentController::class, 'serveFile'])
+    ->where('filename', '.*')
+    ->name('admin.documents.serve');
 
 // routes/web.php
 Route::get('/test-status', function () {
