@@ -49,11 +49,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Admin routes
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', UserController::class);
-    Route::resource('roles', RoleController::class);
-    Route::resource('permissions', PermissionController::class);
     Route::resource('departments', DepartmentController::class);
-    
     Route::resource('service-registrations', ServiceRegistrationController::class)
         ->except(['edit', 'update'])
         ->middleware('check.registration.department');
@@ -65,6 +61,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('service-registrations/{id}/status', [ServiceRegistrationController::class, 'updateStatus'])
         ->name('service-registrations.update-status')
         ->middleware('check.registration.department');
+
+    Route::patch('service-registrations/{id}/status', [ServiceRegistrationController::class, 'updateStatus'])
+        ->middleware('permission:service-registration-update-status')
+        ->name('service-registrations.update-status');
 
     Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
         ->name('registrations.destroy')

@@ -20,6 +20,7 @@ class ServiceRegistrationController extends Controller
         $this->middleware('permission:service-registration-create', ['only' => ['create', 'store']]);
         $this->middleware('permission:service-registration-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:service-registration-delete', ['only' => ['destroy']]);
+        $this->middleware('permission:service-registration-update-status', ['only' => ['updateStatus']]);
     }
     public function index(Request $request)
     {

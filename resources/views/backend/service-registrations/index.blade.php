@@ -222,7 +222,23 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    @cannot('service-registration-update-status')
+                                    <span class="
+                                    inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    @switch($registration->status)
+                                        @case('pending') bg-gray-100 text-gray-800 @break
+                                        @case('received') bg-blue-100 text-blue-800 @break
+                                        @case('processing') bg-yellow-100 text-yellow-800 @break
+                                        @case('completed') bg-green-100 text-green-800 @break
+                                        @case('returned') bg-red-100 text-red-800 @break
+                                        @default bg-gray-100 text-gray-800
+                                    @endswitch
+    ">
+                                        {{ __("statuses.$registration->status") }}
+                                    </span>
+                                    @else
+                                    <select
+                                        class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                         data-registration-id="{{ $registration->id }}">
                                         <option value="pending" {{ $registration->status == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
                                         <option value="received" {{ $registration->status == 'received' ? 'selected' : '' }}>Đã tiếp nhận</option>
@@ -230,6 +246,8 @@
                                         <option value="completed" {{ $registration->status == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                                         <option value="returned" {{ $registration->status == 'returned' ? 'selected' : '' }}>Trả hồ sơ</option>
                                     </select>
+                                    @endcannot
+
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @can('service-registration-edit')
@@ -279,8 +297,12 @@
 <script src="http://localhost:6001/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
 <script>
-    window.userDepartments = @json(optional(auth()->user())->departments->pluck('id') ?? []);
+    window.userDepartments = @json(optional(auth() -> user()) -> departments -> pluck('id') ?? []);
 </script>
+<script>
+    window.userPermissions = @json(auth()->user()->getAllPermissions()->pluck('name'));
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Auto-submit form khi thay đổi select
@@ -428,7 +450,7 @@
 
     function makeDashboardRow(item) {
         const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
-
+        const hasPermission = window.userPermissions.includes('service-registration-update-status');
         return `
     <tr class="hover:bg-gray-50" data-id="${item.id}">
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.id}</td>
@@ -470,15 +492,21 @@
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.at}</td>
         <td class="px-6 py-4 whitespace-nowrap">
-            <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                data-registration-id="${item.id}">
-                <option value="pending"    ${item.new_status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
-                <option value="received"   ${item.new_status === 'received' ? 'selected' : ''}>Đã tiếp nhận</option>
-                <option value="processing" ${item.new_status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
-                <option value="completed"  ${item.new_status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
-                <option value="returned"   ${item.new_status === 'returned' ? 'selected' : ''}>Trả hồ sơ</option>
-            </select>
-        </td>
+                ${hasPermission ? `
+                    <select class="status-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        data-registration-id="${item.id}">
+                        <option value="pending"    ${item.new_status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
+                        <option value="received"   ${item.new_status === 'received' ? 'selected' : ''}>Đã tiếp nhận</option>
+                        <option value="processing" ${item.new_status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
+                        <option value="completed"  ${item.new_status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
+                        <option value="returned"   ${item.new_status === 'returned' ? 'selected' : ''}>Trả hồ sơ</option>
+                    </select>
+                ` : `
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                        ${translateStatus(item.new_status)}
+                    </span>
+                `}
+            </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
             <a href="/admin/service-registrations/${item.id}" class="text-blue-600 hover:text-blue-900 me-3">
                 <i class="fas fa-eye"></i>
@@ -493,7 +521,16 @@
         </td>
     </tr>`;
     }
-
+    function translateStatus(status) {
+        switch (status) {
+            case 'pending': return 'Chờ xử lý';
+            case 'received': return 'Đã tiếp nhận';
+            case 'processing': return 'Đang xử lý';
+            case 'completed': return 'Hoàn thành';
+            case 'returned': return 'Trả hồ sơ';
+            default: return 'Không xác định';
+        }
+    }
     echo.channel('laravel_database_registrations')
         .listen('.registration.created', (e) => {
 

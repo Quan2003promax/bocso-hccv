@@ -102,7 +102,6 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        
         if ($user->hasRole('Super-Admin')) {
             return redirect()->route('users.index')
                 ->with('error', 'Bạn không có quyền chỉnh sửa người dùng này');
@@ -170,7 +169,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return redirect()->route('users.index')
+            return redirect()->route('users.edit', $user->id)
                 ->with('success', 'Người dùng được cập nhật thành công');
         } catch (\Exception $e) {
             DB::rollBack();
