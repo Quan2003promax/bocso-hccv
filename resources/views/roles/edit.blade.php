@@ -111,10 +111,10 @@
             <!-- Footer -->
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-150 ease-in-out">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700  rounded-md transition duration-150 ease-in-out">
                         <i class="fas fa-save mr-2"></i> Cập nhật vai trò
                     </button>
-                    <a href="{{ route('roles.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition duration-150 ease-in-out">
+                    <a href="{{ route('roles.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700  rounded-md transition duration-150 ease-in-out">
                         <i class="fas fa-times mr-2"></i> Hủy
                     </a>
                 </div>

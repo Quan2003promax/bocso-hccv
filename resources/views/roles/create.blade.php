@@ -10,7 +10,7 @@
                     <p class="text-sm text-gray-600 mt-1">Thêm vai trò mới vào hệ thống</p>
                 </div>
                 <div>
-                    <a class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition duration-150 ease-in-out" href="{{ route('roles.index') }}">
+                    <a class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700  rounded-md transition duration-150 ease-in-out" href="{{ route('roles.index') }}">
                         <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách
                     </a>
                 </div>
