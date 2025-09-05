@@ -113,4 +113,9 @@ Route::get('/test-file-access', function () {
     ];
 });
 
+// Socket test route
+Route::get('/socket-test', function () {
+    return view('socket-test');
+})->name('socket.test');
+
 require __DIR__ . '/auth.php';

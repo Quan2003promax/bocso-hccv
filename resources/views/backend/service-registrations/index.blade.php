@@ -294,8 +294,6 @@
 @endsection
 
 @push('scripts')
-<script src="http://localhost:6001/socket.io/socket.io.js"></script>
-<script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
 <script>
     window.userDepartments = @json(optional(auth() -> user()) -> departments -> pluck('id') ?? []);
 </script>
@@ -431,17 +429,8 @@
 
 
 <script>
-    // cho Echo dùng io toàn cục
-    window.io = io;
-
-    // Một số bản IIFE expose constructor khác nhau, bắt tất cả:
-    const EchoCtor = (window.Echo && window.Echo.default) || window.Echo || window.LaravelEcho;
-
-    const echo = new EchoCtor({
-        broadcaster: 'socket.io',
-        host: `${location.hostname}:6001`,
-        transports: ['websocket', 'polling'],
-    });
+    // SocketManager sẽ được khởi tạo tự động
+    // Chúng ta chỉ cần đợi nó sẵn sàng
 </script>
 <script>
     function truncate(str, maxLength = 20) {
@@ -531,9 +520,35 @@
             default: return 'Không xác định';
         }
     }
-    echo.channel('laravel_database_registrations')
-        .listen('.registration.created', (e) => {
 
+    function getStatusBadge(status) {
+        switch (status) {
+            case 'pending':
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Chờ xử lý</span>';
+            case 'received':
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Đã tiếp nhận</span>';
+            case 'processing':
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-200 text-blue-800">Đang xử lý</span>';
+            case 'completed':
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Hoàn thành</span>';
+            case 'returned':
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Trả hồ sơ</span>';
+            default:
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Không xác định</span>';
+        }
+    }
+    // Sử dụng SocketManager để lắng nghe events
+    function setupSocketListeners() {
+        if (!window.socketManager || !window.socketManager.isSocketAvailable()) {
+            console.log('SocketManager chưa sẵn sàng, thử lại sau...');
+            setTimeout(setupSocketListeners, 1000);
+            return;
+        }
+
+        // Lắng nghe registration created
+        window.socketManager.listen('laravel_database_registrations', '.registration.created', (e) => {
+            console.log('Received registration.created event:', e);
+            
             const userDepartments = window.userDepartments || [];
 
             if (!userDepartments.includes(Number(e.department_id))) {
@@ -552,7 +567,93 @@
             prependRow(tbody, rowHtml);
             attachStatusListeners();
             attachDeleteListeners();
+            
+            // Lưu vào state
+            window.socketManager.updateRegistration(e);
+        }, 'registration-created');
+
+        // Lắng nghe status updated
+        window.socketManager.listen('laravel_database_status', '.status.updated', (e) => {
+            console.log('Received status.updated event:', e);
+            
+            const userDepartments = window.userDepartments || [];
+            if (!userDepartments.includes(Number(e.department_id))) {
+                return;
+            }
+
+            // Cập nhật row trong table
+            const row = document.querySelector(`tr[data-id="${e.id}"]`);
+            if (row) {
+                const statusCell = row.querySelector('.status-cell');
+                if (statusCell) {
+                    statusCell.innerHTML = getStatusBadge(e.new_status);
+                }
+            }
+            
+            // Lưu vào state
+            window.socketManager.updateRegistration(e);
+        }, 'status-updated');
+
+        // Lắng nghe registration deleted
+        window.socketManager.listen('laravel_database_status', '.status.deleted', (e) => {
+            console.log('Received status.deleted event:', e);
+            
+            const userDepartments = window.userDepartments || [];
+            if (!userDepartments.includes(Number(e.department_id))) {
+                return;
+            }
+
+            // Xóa row khỏi table
+            const row = document.querySelector(`tr[data-id="${e.id}"]`);
+            if (row) {
+                row.classList.add('fade-out');
+                setTimeout(() => row.remove(), 800);
+            }
+            
+            // Xóa khỏi state
+            window.socketManager.removeRegistration(e.id);
+        }, 'status-deleted');
+
+        console.log('Socket listeners setup completed');
+    }
+
+    // Khôi phục state từ SocketManager
+    function restoreStateFromSocketManager() {
+        if (!window.socketManager) return;
+
+        const savedRegistrations = window.socketManager.getAllRegistrations();
+        if (savedRegistrations.length === 0) return;
+
+        const tbody = document.querySelector('tbody');
+        if (!tbody) return;
+
+        // Xóa empty row nếu có
+        const emptyRow = tbody.querySelector('td[colspan]');
+        if (emptyRow) emptyRow.parentElement.remove();
+
+        // Thêm lại các registrations đã lưu
+        savedRegistrations.forEach(registration => {
+            const existingRow = tbody.querySelector(`tr[data-id="${registration.id}"]`);
+            if (!existingRow) {
+                const rowHtml = makeDashboardRow(registration);
+                prependRow(tbody, rowHtml);
+            }
         });
+
+        // Reattach listeners
+        attachStatusListeners();
+        attachDeleteListeners();
+
+        console.log(`Restored ${savedRegistrations.length} registrations from state`);
+    }
+
+    // Khởi tạo listeners khi DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+        setupSocketListeners();
+        
+        // Khôi phục state sau một chút delay để đảm bảo SocketManager đã sẵn sàng
+        setTimeout(restoreStateFromSocketManager, 500);
+    });
 
 
     // ví dụ: rebind JS cho status select (tùy bạn đã viết)

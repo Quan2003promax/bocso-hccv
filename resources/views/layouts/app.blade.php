@@ -18,6 +18,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
+    
+    <!-- Socket Manager - Load globally -->
+    <script src="http://localhost:6001/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+    <script src="{{ asset('js/socket-manager.js') }}"></script>
 
     @stack('styles')
 </head>
