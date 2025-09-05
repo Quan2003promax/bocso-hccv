@@ -14,13 +14,13 @@
                     PDF
                 </span>
                 <a href="{{ $fileInfo['download_url'] }}" 
-                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700     rounded-md"
+                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
                    download="{{ $fileInfo['original_name'] }}">
                     <i class="fas fa-download mr-2"></i>
                     Tải về gốc
                 </a>
                 <a href="{{ $fileInfo['pdf_url'] }}" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700   rounded-md"
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                    download="{{ pathinfo($fileInfo['original_name'], PATHINFO_FILENAME) }}_converted.pdf">
                     <i class="fas fa-file-pdf mr-2"></i>
                     Tải PDF
@@ -56,13 +56,31 @@
                     </div>
                 </div>
                 
-                <iframe src="{{ $fileInfo['pdf_url'] }}" 
-                        class="w-full h-screen min-h-[600px]"
-                        frameborder="0">
-                    <p>Trình duyệt của bạn không hỗ trợ iframe. 
-                       <a href="{{ $fileInfo['pdf_url'] }}" target="_blank">Nhấn vào đây để xem</a>
-                    </p>
-                </iframe>
+                @if(isset($fileInfo['pdf_url']) && !empty($fileInfo['pdf_url']))
+                    <iframe src="{{ $fileInfo['pdf_url'] }}" 
+                            class="w-full h-screen min-h-[600px]"
+                            frameborder="0"
+                            onload="console.log('PDF iframe loaded successfully')"
+                            onerror="console.error('PDF iframe failed to load')">
+                        <p>Trình duyệt của bạn không hỗ trợ iframe. 
+                           <a href="{{ $fileInfo['pdf_url'] }}" target="_blank" class="text-blue-600 underline">Nhấn vào đây để xem</a>
+                        </p>
+                    </iframe>
+                @else
+                    <div class="flex flex-col items-center justify-center h-96 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Không thể hiển thị PDF</h3>
+                            <p class="text-sm text-gray-600 mb-4">URL PDF không hợp lệ hoặc file không tồn tại</p>
+                            <a href="{{ $fileInfo['download_url'] }}" 
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                               download="{{ $fileInfo['original_name'] }}">
+                                <i class="fas fa-download mr-2"></i>
+                                Tải về file gốc
+                            </a>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">

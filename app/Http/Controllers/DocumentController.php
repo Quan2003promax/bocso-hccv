@@ -146,20 +146,43 @@ class DocumentController extends Controller
      */
     public function serveFile($filename)
     {
+        // Decode filename để xử lý các ký tự đặc biệt
+        $filename = urldecode($filename);
         $filePath = 'documents/' . $filename;
         
+        // Kiểm tra file trong thư mục documents
         if (!Storage::disk('public')->exists($filePath)) {
-            abort(404, 'File không tồn tại');
+            // Thử tìm trong thư mục converted
+            $convertedPath = 'documents/converted/' . $filename;
+            if (!Storage::disk('public')->exists($convertedPath)) {
+                \Log::error('File không tồn tại', [
+                    'filename' => $filename,
+                    'documents_path' => $filePath,
+                    'converted_path' => $convertedPath,
+                    'storage_path' => Storage::disk('public')->path('')
+                ]);
+                abort(404, 'File không tồn tại');
+            }
+            $filePath = $convertedPath;
         }
         
         $fullPath = Storage::disk('public')->path($filePath);
         $mimeType = mime_content_type($fullPath);
+        
+        \Log::info('Serving file', [
+            'filename' => $filename,
+            'file_path' => $filePath,
+            'full_path' => $fullPath,
+            'mime_type' => $mimeType,
+            'file_exists' => file_exists($fullPath)
+        ]);
         
         return response()->file($fullPath, [
             'Content-Type' => $mimeType,
             'Access-Control-Allow-Origin' => '*',
             'Access-Control-Allow-Methods' => 'GET, OPTIONS',
             'Access-Control-Allow-Headers' => 'Content-Type',
+            'X-Frame-Options' => 'SAMEORIGIN',
         ]);
     }
 }

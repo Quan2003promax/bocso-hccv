@@ -88,25 +88,30 @@ Route::get('/test-status', function () {
 
 // Test route để kiểm tra file access
 Route::get('/test-file-access', function () {
-    $filename = '1756527701_iqaNf2AuTU_phieu-dang-ky-thuc-tapdocx';
-    $filePath = 'documents/' . $filename;
+    $documentsPath = storage_path('app/public/documents');
+    $files = [];
     
-    if (!Storage::disk('public')->exists($filePath)) {
-        return 'File không tồn tại';
+    if (is_dir($documentsPath)) {
+        $files = array_diff(scandir($documentsPath), array('.', '..'));
     }
     
-    $fullPath = Storage::disk('public')->path($filePath);
-    $mimeType = mime_content_type($fullPath);
-    $fileSize = filesize($fullPath);
+    $convertedPath = storage_path('app/public/documents/converted');
+    $convertedFiles = [];
+    
+    if (is_dir($convertedPath)) {
+        $convertedFiles = array_diff(scandir($convertedPath), array('.', '..'));
+    }
     
     return [
-        'file_exists' => true,
-        'filename' => $filename,
-        'mime_type' => $mimeType,
-        'file_size' => $fileSize,
-        'storage_path' => $fullPath,
-        'public_url' => Storage::url($filePath),
-        'serve_url' => url(route('admin.documents.serve', ['filename' => $filename]))
+        'documents_path' => $documentsPath,
+        'documents_exists' => is_dir($documentsPath),
+        'documents_files' => $files,
+        'converted_path' => $convertedPath,
+        'converted_exists' => is_dir($convertedPath),
+        'converted_files' => $convertedFiles,
+        'storage_url_base' => Storage::url('documents/'),
+        'public_path' => public_path('storage/documents'),
+        'symlink_exists' => is_link(public_path('storage'))
     ];
 });
 

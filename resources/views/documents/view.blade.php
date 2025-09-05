@@ -50,17 +50,36 @@
                     <div class="flex justify-center p-4">
                         <img src="{{ $fileInfo['view_url'] }}" 
                              alt="{{ $fileInfo['original_name'] }}"
-                             class="max-w-full h-auto max-h-96 object-contain">
+                             class="max-w-full h-auto max-h-96 object-contain"
+                             onload="console.log('Image loaded successfully')"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkzhu5dpIGxvYWQgaGluaDwvdGV4dD4KICA8L3N2Zz4='; console.error('Image failed to load');">
                     </div>
-                @else
+                @elseif($fileInfo['mime_type'] === 'application/pdf')
                     <!-- Hiển thị PDF trong iframe -->
                     <iframe src="{{ $fileInfo['view_url'] }}" 
                             class="w-full h-screen min-h-[600px]"
-                            frameborder="0">
+                            frameborder="0"
+                            onload="console.log('PDF iframe loaded successfully')"
+                            onerror="console.error('PDF iframe failed to load')">
                         <p>Trình duyệt của bạn không hỗ trợ iframe. 
-                           <a href="{{ $fileInfo['view_url'] }}" target="_blank">Nhấn vào đây để xem</a>
+                           <a href="{{ $fileInfo['view_url'] }}" target="_blank" class="text-blue-600 underline">Nhấn vào đây để xem</a>
                         </p>
                     </iframe>
+                @else
+                    <!-- Fallback cho các loại file khác -->
+                    <div class="flex flex-col items-center justify-center h-96 bg-gray-50">
+                        <div class="text-center">
+                            <i class="fas fa-file-alt text-gray-400 text-6xl mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">File không thể xem trực tiếp</h3>
+                            <p class="text-sm text-gray-600 mb-4">Loại file: {{ $fileInfo['mime_type'] }}</p>
+                            <a href="{{ $fileInfo['download_url'] }}" 
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                               download="{{ $fileInfo['original_name'] }}">
+                                <i class="fas fa-download mr-2"></i>
+                                Tải về để xem
+                            </a>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>
