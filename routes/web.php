@@ -71,10 +71,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('documents/{id}/view', [DocumentController::class, 'view'])->name('documents.view');
     Route::get('documents/{id}/info', [DocumentController::class, 'getFileInfo'])->name('documents.info');
     Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
-    
-    // Public file access route (không cần auth)
-    Route::get('documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('documents.serve');
 });
+
+// Public file access route (không cần auth)
+Route::get('admin/documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('admin.documents.serve');
 
 // routes/web.php
 Route::get('/test-status', function () {

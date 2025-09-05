@@ -39,7 +39,8 @@ class DocumentController extends Controller
                 
                 if ($pdfPath) {
                     $fileInfo = $this->documentConverter->getFileInfo($registration);
-                    $fileInfo['pdf_url'] = Storage::url($pdfPath);
+                    $filename = basename($pdfPath);
+                    $fileInfo['pdf_url'] = route('admin.documents.serve', ['filename' => $filename]);
                     $fileInfo['is_converted'] = true;
                     
                     \Log::info('Converted DOC/DOCX to PDF successfully', [
@@ -76,6 +77,11 @@ class DocumentController extends Controller
         
         // Đối với các file khác, kiểm tra xem có thể xem trực tiếp không
         $fileInfo = $this->documentConverter->getFileInfo($registration);
+        // Nếu là PDF/ảnh và đang nằm trong public storage, đảm bảo dùng route serve để có header inline
+        if (!empty($fileInfo['pdf_url'])) {
+            $basename = basename(parse_url($fileInfo['pdf_url'], PHP_URL_PATH));
+            $fileInfo['pdf_url'] = route('admin.documents.serve', ['filename' => $basename]);
+        }
         
         if (!$fileInfo['can_view']) {
             // Nếu không thể xem trực tiếp, hiển thị trang thông báo
@@ -154,9 +160,18 @@ class DocumentController extends Controller
         
         $fullPath = Storage::disk('public')->path($filePath);
         $mimeType = mime_content_type($fullPath);
-        
+        $isInlineRenderable = in_array($mimeType, [
+            'application/pdf',
+            'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'
+        ]);
+
+        $disposition = ($isInlineRenderable ? 'inline' : 'attachment') . '; filename="' . basename($fullPath) . '"';
+
         return response()->file($fullPath, [
             'Content-Type' => $mimeType,
+            'Content-Disposition' => $disposition,
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Referrer-Policy' => 'no-referrer-when-downgrade',
             'Access-Control-Allow-Origin' => '*',
             'Access-Control-Allow-Methods' => 'GET, OPTIONS',
             'Access-Control-Allow-Headers' => 'Content-Type',
