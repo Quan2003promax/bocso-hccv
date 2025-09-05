@@ -47,6 +47,7 @@
             opacity: 0;
             transform: translateY(-10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -213,8 +214,8 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->identity_number }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <a href="{{ route('admin.service-registrations.show', $registration->id) }}" 
-                                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                    <a href="{{ route('admin.service-registrations.show', $registration->id) }}"
+                                        class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
                                         <i class="fas fa-eye me-1"></i>
                                         Xem chi tiết
                                     </a>
@@ -277,6 +278,9 @@
 @push('scripts')
 <script src="http://localhost:6001/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+<script>
+    window.userDepartments = @json(optional(auth()->user())->departments->pluck('id') ?? []);
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Auto-submit form khi thay đổi select
@@ -401,6 +405,9 @@
         });
     });
 </script>
+
+
+
 <script>
     // cho Echo dùng io toàn cục
     window.io = io;
@@ -415,12 +422,6 @@
     });
 </script>
 <script>
-    // echo = new EchoCtor({
-    //     broadcaster: 'socket.io',
-    //     host: `${location.hostname}:6001`,
-    //     transports: ['websocket', 'polling'],
-    // });
-
     function truncate(str, maxLength = 20) {
         return (str && str.length > maxLength) ? str.substring(0, maxLength - 3) + '...' : (str || 'Không có');
     }
@@ -491,12 +492,17 @@
             </form>
         </td>
     </tr>`;
-}
-
-
+    }
 
     echo.channel('laravel_database_registrations')
         .listen('.registration.created', (e) => {
+
+            const userDepartments = window.userDepartments || [];
+
+            if (!userDepartments.includes(Number(e.department_id))) {
+                return;
+            }
+
             const tbody = document.querySelector('tbody');
             if (!tbody) return;
 
@@ -511,26 +517,6 @@
             attachDeleteListeners();
         });
 
-    // echo.channel('laravel_database_registrations')
-    //     .listen('.registration.created', (e) => {
-    //         console.log('📥 New registration:', e);
-
-    //         const tbody = document.querySelector('tbody');
-    //         if (!tbody) return;
-
-    //         // nếu có dòng "Chưa có đăng ký nào" thì xoá
-    //         const emptyRow = tbody.querySelector('td[colspan]');
-    //         if (emptyRow) emptyRow.parentElement.remove();
-
-    //         // thêm record mới vào đầu bảng
-    //         const wrapper = document.createElement('tbody');
-    //         wrapper.innerHTML = makeDashboardRow(e);
-    //         tbody.prepend(wrapper.firstElementChild);
-    //         prependRow(tbody, wrapper.innerHTML);
-    //         // gắn lại event cho select và delete form nếu đang dùng JS xử lý
-    //         attachStatusListeners();
-    //         attachDeleteListeners();
-    //     });
 
     // ví dụ: rebind JS cho status select (tùy bạn đã viết)
     function attachStatusListeners() {

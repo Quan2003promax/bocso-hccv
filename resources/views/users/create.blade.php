@@ -82,3 +82,23 @@
   </div>
 </div>
 @endsection
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkAll = document.getElementById('checkAllDepartments');
+    const items = document.querySelectorAll('.department-item');
+
+    checkAll.addEventListener('change', function() {
+      items.forEach(cb => cb.checked = checkAll.checked);
+    });
+
+    items.forEach(cb => {
+      cb.addEventListener('change', function() {
+        if (![...items].every(i => i.checked)) {
+          checkAll.checked = false;
+        } else {
+          checkAll.checked = true;
+        }
+      });
+    });
+  });
+</script>

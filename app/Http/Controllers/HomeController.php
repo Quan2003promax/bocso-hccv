@@ -29,7 +29,6 @@ class HomeController extends Controller
                     $query->where('name', 'LIKE', "%{$searchQuery}%");
                 })
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
                 ->get();
         }
         
@@ -38,7 +37,6 @@ class HomeController extends Controller
             ->whereIn('status', ['pending', 'received', 'processing', 'returned']) // case short field status
             ->orderByRaw("FIELD(status, 'pending', 'received','processing', 'completed', 'returned')")
             ->orderBy('created_at', 'asc')
-            ->limit(10)
             ->get();
 
         return view('home', compact('departments', 'pendingRegistrations', 'searchQuery', 'searchResults'));

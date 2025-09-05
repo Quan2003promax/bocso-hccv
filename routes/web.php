@@ -45,34 +45,37 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
-    
-    // Routes demo middleware mới
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [ExampleController::class, 'index'])->name('index');
-        Route::get('/{id}/edit', [ExampleController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ExampleController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ExampleController::class, 'destroy'])->name('destroy');
-        Route::get('/hr-only', [ExampleController::class, 'hrOnly'])->name('hr-only');
-        Route::get('/check-permissions', [ExampleController::class, 'checkPermissions'])->name('check-permissions');
-    });
 });
 
 // Admin routes
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', UserController::class);
+    Route::resource('roles', RoleController::class);
+    Route::resource('permissions', PermissionController::class);
     Route::resource('departments', DepartmentController::class);
-    Route::resource('service-registrations', ServiceRegistrationController::class)->except(['edit', 'update']);
-    Route::post('service-registrations', [ServiceRegistrationController::class, 'store'])->name('service-registrations.store');
+    
+    Route::resource('service-registrations', ServiceRegistrationController::class)
+        ->except(['edit', 'update'])
+        ->middleware('check.registration.department');
+
+    Route::post('service-registrations', [ServiceRegistrationController::class, 'store'])
+        ->name('service-registrations.store')
+        ->middleware('check.registration.department');
+
     Route::patch('service-registrations/{id}/status', [ServiceRegistrationController::class, 'updateStatus'])
-    ->name('service-registrations.update-status');
+        ->name('service-registrations.update-status')
+        ->middleware('check.registration.department');
+
     Route::delete('/registrations/{id}', [ServiceRegistrationController::class, 'destroy'])
-    ->name('registrations.destroy');
+        ->name('registrations.destroy')
+        ->middleware('check.registration.department');
     
     // Document routes
     Route::get('documents/{id}/view', [DocumentController::class, 'view'])->name('documents.view');
     Route::get('documents/{id}/info', [DocumentController::class, 'getFileInfo'])->name('documents.info');
     Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
     
-    // Public file access route (không cần auth)
+    // Public file
     Route::get('documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('documents.serve');
 });
 
