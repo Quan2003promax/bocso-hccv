@@ -128,16 +128,7 @@
                     Cập nhật lần cuối: {{ $role->updated_at->diffForHumans() }}
                 </div>
                 
-                <div class="flex items-center space-x-3">
-                    @can('role-edit')
-                        <a href="{{ route('roles.edit', $role->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700  rounded-md transition duration-150 ease-in-out">
-                            <i class="fas fa-edit mr-2"></i> Chỉnh sửa
-                        </a>
-                    @endcan
-                    <a href="{{ route('roles.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700  rounded-md transition duration-150 ease-in-out">
-                        <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách
-                    </a>
-                </div>
+                
             </div>
         </div>
     </div>

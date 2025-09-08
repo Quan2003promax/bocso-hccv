@@ -22,13 +22,7 @@ class PermissionController extends Controller
 
     public function index(Request $request)
     {
-        $permissions = Permission::orderBy('name')->get();
-        
-        if ($request->ajax()) {
-            return response()->json([
-                'permissions' => $permissions,
-            ]);
-        }
+        $permissions = Permission::orderBy('name')->paginate(10);
         
         return view('permissions.index', compact('permissions'));
     }
@@ -107,23 +101,17 @@ class PermissionController extends Controller
             // Kiểm tra xem quyền có đang được sử dụng bởi role nào không
             $rolesUsingPermission = $permission->roles()->count();
             if ($rolesUsingPermission > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể xóa quyền này vì đang được sử dụng bởi ' . $rolesUsingPermission . ' vai trò!'
-                ]);
+                return redirect()->route('permissions.index')
+                    ->with('error', 'Không thể xóa quyền này vì đang được sử dụng bởi ' . $rolesUsingPermission . ' vai trò!');
             }
 
             $permission->delete();
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Quyền đã được xóa thành công!'
-            ]);
+            return redirect()->route('permissions.index')
+                ->with('success', 'Quyền đã được xóa thành công!');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra khi xóa quyền: ' . $e->getMessage()
-            ]);
+            return redirect()->route('permissions.index')
+                ->with('error', 'Có lỗi xảy ra khi xóa quyền: ' . $e->getMessage());
         }
     }
 }

@@ -83,7 +83,10 @@
   document.addEventListener('DOMContentLoaded', function() {
     const checkAll = document.getElementById('checkAllDepartments');
     const items = document.querySelectorAll('.department-item');
-
+if (!checkAll ||  !items || items.length === 0)
+{
+  return  ;
+}
     checkAll.addEventListener('change', function() {
       items.forEach(cb => cb.checked = checkAll.checked);
     });

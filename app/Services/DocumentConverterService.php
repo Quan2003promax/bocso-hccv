@@ -50,7 +50,7 @@ class DocumentConverterService
                 'target' => $pdfFilePath
             ]);
 
-            // Thử convert bằng LibreOffice trước (nếu có)
+            // Thử convert bằng LibreOffice trước (nếu có) - tốt nhất cho phông chữ tiếng Việt
             $pdfFullPath = Storage::disk('public')->path($pdfFilePath);
             if ($this->convertWithLibreOffice($originalFilePath, $pdfFullPath)) {
                 Log::info('Convert file thành công với LibreOffice', [
@@ -60,31 +60,30 @@ class DocumentConverterService
                 return $pdfFilePath;
             }
 
-            // Fallback: Sử dụng PhpWord với dompdf và cấu hình Unicode
-            Log::info('LibreOffice không khả dụng, sử dụng PhpWord với Unicode', [
+            // Fallback: Sử dụng HTML intermediate với cấu hình Unicode tốt hơn
+            Log::info('LibreOffice không khả dụng, sử dụng HTML intermediate với Unicode', [
                 'file_path' => $filePath
             ]);
 
-            // Cấu hình PhpWord với dompdf
-            Settings::setPdfRenderer(Settings::PDF_RENDERER_DOMPDF, base_path('vendor/dompdf/dompdf'));
-            
-            // Cấu hình dompdf để hỗ trợ Unicode
-            $options = new \Dompdf\Options();
-            $options->set('isRemoteEnabled', true);
-            $options->set('isFontSubsettingEnabled', true);
-            $options->set('defaultFont', 'DejaVu Sans');
-            $options->set('fontCache', storage_path('fonts'));
-            $options->set('tempDir', storage_path('temp'));
-            
-            // Tạo instance dompdf với options
-            $dompdf = new \Dompdf\Dompdf($options);
-            
             // Load document
             $phpWord = IOFactory::load($originalFilePath);
             
-            // Convert to PDF
-            $xmlWriter = IOFactory::createWriter($phpWord, 'PDF');
-            $xmlWriter->save($pdfFullPath);
+            // Convert to HTML với encoding UTF-8
+            $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+            $htmlContent = $htmlWriter->getContent();
+            
+            // Cải thiện HTML để hỗ trợ Unicode và giữ nguyên bố cục
+            $htmlContent = $this->fixVietnameseEncodingAndLayout($htmlContent);
+            
+            // Tạo file HTML tạm
+            $htmlTempPath = storage_path('temp/' . uniqid() . '.html');
+            file_put_contents($htmlTempPath, $htmlContent);
+            
+            // Convert HTML sang PDF với cấu hình Unicode
+            $this->convertHtmlToPdfWithUnicode($htmlTempPath, $pdfFullPath);
+            
+            // Xóa file HTML tạm
+            unlink($htmlTempPath);
 
             Log::info('Convert file thành công với PhpWord', [
                 'original' => $filePath,
@@ -112,6 +111,7 @@ class DocumentConverterService
             // Kiểm tra LibreOffice có sẵn không
             $libreOfficePath = $this->findLibreOffice();
             if (!$libreOfficePath) {
+                Log::info('LibreOffice not found, skipping LibreOffice conversion');
                 return false;
             }
 
@@ -121,27 +121,49 @@ class DocumentConverterService
                 mkdir($outputDir, 0755, true);
             }
 
-            // Command để convert
+            // Command để convert với cấu hình tốt hơn cho tiếng Việt
             $command = sprintf(
-                '"%s" --headless --convert-to pdf --outdir "%s" "%s"',
+                '"%s" --headless --convert-to pdf --outdir "%s" --infilter="writer8" "%s"',
                 $libreOfficePath,
                 $outputDir,
                 $inputPath
             );
 
+            Log::info('Executing LibreOffice command', [
+                'command' => $command,
+                'input_path' => $inputPath,
+                'output_path' => $outputPath
+            ]);
+
             // Thực thi command
             $output = [];
             $returnCode = 0;
-            exec($command, $output, $returnCode);
+            exec($command . ' 2>&1', $output, $returnCode);
 
-            if ($returnCode === 0 && file_exists($outputPath)) {
+            // Kiểm tra file output
+            $expectedOutputPath = $outputDir . '/' . pathinfo($inputPath, PATHINFO_FILENAME) . '.pdf';
+            
+            if ($returnCode === 0 && file_exists($expectedOutputPath)) {
+                // Di chuyển file đến vị trí mong muốn
+                if ($expectedOutputPath !== $outputPath) {
+                    rename($expectedOutputPath, $outputPath);
+                }
+                
+                Log::info('LibreOffice convert successful', [
+                    'input' => $inputPath,
+                    'output' => $outputPath,
+                    'file_size' => filesize($outputPath)
+                ]);
+                
                 return true;
             }
 
             Log::warning('LibreOffice convert failed', [
                 'command' => $command,
                 'output' => $output,
-                'return_code' => $returnCode
+                'return_code' => $returnCode,
+                'expected_output' => $expectedOutputPath,
+                'file_exists' => file_exists($expectedOutputPath)
             ]);
 
             return false;
@@ -158,30 +180,166 @@ class DocumentConverterService
     private function findLibreOffice()
     {
         $possiblePaths = [
-            // Windows
+            // Windows - Các đường dẫn phổ biến
             'C:\Program Files\LibreOffice\program\soffice.exe',
             'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+            'C:\laragon\bin\libreoffice\program\soffice.exe',
+            'C:\laragon\bin\libreoffice\program\soffice.com',
             // Linux
             '/usr/bin/libreoffice',
             '/usr/bin/soffice',
+            '/usr/local/bin/libreoffice',
+            '/usr/local/bin/soffice',
             // macOS
             '/Applications/LibreOffice.app/Contents/MacOS/soffice'
         ];
 
         foreach ($possiblePaths as $path) {
             if (file_exists($path)) {
+                Log::info('Found LibreOffice at: ' . $path);
                 return $path;
             }
         }
 
         // Thử tìm trong PATH
         $output = [];
-        exec('where soffice 2>/dev/null', $output);
-        if (!empty($output[0])) {
+        if (PHP_OS_FAMILY === 'Windows') {
+            exec('where soffice 2>nul', $output);
+            if (empty($output)) {
+                exec('where libreoffice 2>nul', $output);
+            }
+        } else {
+            exec('which soffice 2>/dev/null', $output);
+            if (empty($output)) {
+                exec('which libreoffice 2>/dev/null', $output);
+            }
+        }
+        
+        if (!empty($output[0]) && file_exists($output[0])) {
+            Log::info('Found LibreOffice in PATH: ' . $output[0]);
             return $output[0];
         }
 
+        Log::warning('LibreOffice not found, will use PhpWord fallback');
         return null;
+    }
+
+    /**
+     * Sửa lỗi encoding tiếng Việt và giữ nguyên bố cục
+     */
+    private function fixVietnameseEncodingAndLayout($htmlContent)
+    {
+        // Đảm bảo HTML có meta charset UTF-8
+        if (strpos($htmlContent, '<meta charset') === false) {
+            $htmlContent = str_replace('<head>', '<head><meta charset="UTF-8">', $htmlContent);
+        }
+        
+        // Thêm CSS để hỗ trợ phông chữ tiếng Việt và giữ nguyên bố cục
+        $css = '
+        <style>
+            body { 
+                font-family: "DejaVu Sans", "Times New Roman", "Arial Unicode MS", sans-serif; 
+                font-size: 12pt;
+                line-height: 1.4;
+                margin: 0;
+                padding: 0;
+                color: #000;
+            }
+            p, div, span, td, th { 
+                font-family: "DejaVu Sans", "Times New Roman", "Arial Unicode MS", sans-serif; 
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 0;
+                border-spacing: 0;
+            }
+            td, th {
+                border: 1px solid #000;
+                padding: 4px 6px;
+                vertical-align: top;
+                text-align: left;
+            }
+            p {
+                margin: 0 0 6pt 0;
+                text-align: justify;
+            }
+            .MsoNormal {
+                margin: 0;
+                text-align: justify;
+            }
+            .MsoTable {
+                border-collapse: collapse;
+                width: 100%;
+                border-spacing: 0;
+            }
+            .MsoTable td, .MsoTable th {
+                border: 1px solid #000;
+                padding: 4px 6px;
+                vertical-align: top;
+            }
+            /* Giữ nguyên formatting từ Word */
+            b, strong { font-weight: bold; }
+            i, em { font-style: italic; }
+            u { text-decoration: underline; }
+            /* Căn chỉnh văn bản */
+            .MsoNormal[style*="text-align: center"] { text-align: center !important; }
+            .MsoNormal[style*="text-align: right"] { text-align: right !important; }
+            .MsoNormal[style*="text-align: justify"] { text-align: justify !important; }
+            /* Font size */
+            .MsoNormal[style*="font-size"] { font-size: inherit !important; }
+            @page { 
+                margin: 2cm; 
+                size: A4;
+            }
+        </style>';
+        
+        $htmlContent = str_replace('</head>', $css . '</head>', $htmlContent);
+        
+        return $htmlContent;
+    }
+
+    /**
+     * Convert HTML sang PDF với cấu hình Unicode
+     */
+    private function convertHtmlToPdfWithUnicode($htmlPath, $pdfPath)
+    {
+        // Cấu hình dompdf để hỗ trợ Unicode
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isFontSubsettingEnabled', false);
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('fontCache', storage_path('fonts'));
+        $options->set('tempDir', storage_path('temp'));
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isPhpEnabled', true);
+        $options->set('defaultPaperSize', 'A4');
+        $options->set('defaultPaperOrientation', 'portrait');
+        $options->set('isCssFloatEnabled', true);
+        $options->set('isJavascriptEnabled', false);
+        $options->set('debugKeepTemp', false);
+        $options->set('defaultMediaType', 'print');
+        $options->set('dpi', 96);
+        
+   
+        $dompdf = new \Dompdf\Dompdf($options);
+        
+
+        $htmlContent = file_get_contents($htmlPath);
+        
+
+        if (!mb_check_encoding($htmlContent, 'UTF-8')) {
+            $htmlContent = mb_convert_encoding($htmlContent, 'UTF-8', 'auto');
+        }
+        
+        $dompdf->loadHtml($htmlContent);
+        
+        // Render PDF
+        $dompdf->render();
+        
+        // Save PDF
+        $output = $dompdf->output();
+        file_put_contents($pdfPath, $output);
     }
 
     /**
@@ -250,7 +408,8 @@ class DocumentConverterService
         \Log::info('Google Docs Viewer URL generation', [
             'file_path' => $registration->document_file,
             'filename' => $filename,
-            'public_url' => $fileUrl
+            'public_url' => $fileUrl,
+            'route_name' => 'admin.documents.serve'
         ]);
         
         // Encode URL để sử dụng trong Google Docs Viewer
@@ -259,7 +418,8 @@ class DocumentConverterService
         $viewerUrl = "https://docs.google.com/viewer?url={$encodedUrl}&embedded=true";
         
         \Log::info('Generated Google Docs Viewer URL', [
-            'viewer_url' => $viewerUrl
+            'viewer_url' => $viewerUrl,
+            'encoded_url' => $encodedUrl
         ]);
         
         return $viewerUrl;
@@ -287,7 +447,8 @@ class DocumentConverterService
         \Log::info('Office Online Viewer URL generation', [
             'file_path' => $registration->document_file,
             'filename' => $filename,
-            'public_url' => $fileUrl
+            'public_url' => $fileUrl,
+            'route_name' => 'admin.documents.serve'
         ]);
         
         // Encode URL để sử dụng trong Microsoft Office Online Viewer
@@ -296,7 +457,8 @@ class DocumentConverterService
         $viewerUrl = "https://view.officeapps.live.com/op/embed.aspx?src={$encodedUrl}";
         
         \Log::info('Generated Office Online Viewer URL', [
-            'viewer_url' => $viewerUrl
+            'viewer_url' => $viewerUrl,
+            'encoded_url' => $encodedUrl
         ]);
         
         return $viewerUrl;
@@ -316,10 +478,13 @@ class DocumentConverterService
         // Kiểm tra nếu là file DOC/DOCX có thể xem qua viewer
         $fileExtension = strtolower(pathinfo($registration->document_original_name, PATHINFO_EXTENSION));
         if (in_array($fileExtension, ['doc', 'docx'])) {
+            $downloadFilename = basename($registration->document_file);
+            $downloadUrl = route('admin.documents.serve', ['filename' => $downloadFilename]);
+            
             return [
                 'can_view' => true,
                 'view_url' => null, // Sẽ được set bởi controller
-                'download_url' => Storage::url($registration->document_file),
+                'download_url' => $downloadUrl,
                 'original_name' => $registration->document_original_name,
                 'file_size' => $registration->formatted_file_size,
                 'mime_type' => $registration->document_mime_type,
@@ -329,19 +494,30 @@ class DocumentConverterService
         }
         
         if (!$viewablePath) {
+            $downloadFilename = basename($registration->document_file);
+            $downloadUrl = route('admin.documents.serve', ['filename' => $downloadFilename]);
+            
             return [
                 'can_view' => false,
-                'download_url' => Storage::url($registration->document_file),
+                'download_url' => $downloadUrl,
                 'original_name' => $registration->document_original_name,
                 'file_size' => $registration->formatted_file_size,
                 'mime_type' => $registration->document_mime_type
             ];
         }
 
+        // Tạo URL cho file view thông qua route serve
+        $filename = basename($viewablePath);
+        $viewUrl = route('admin.documents.serve', ['filename' => $filename]);
+        
+        // Tạo URL cho file download
+        $downloadFilename = basename($registration->document_file);
+        $downloadUrl = route('admin.documents.serve', ['filename' => $downloadFilename]);
+
         return [
             'can_view' => true,
-            'view_url' => Storage::url($viewablePath),
-            'download_url' => Storage::url($registration->document_file),
+            'view_url' => $viewUrl,
+            'download_url' => $downloadUrl,
             'original_name' => $registration->document_original_name,
             'file_size' => $registration->formatted_file_size,
             'mime_type' => $registration->document_mime_type,

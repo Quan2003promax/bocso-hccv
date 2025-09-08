@@ -1,298 +1,130 @@
 @extends('layouts.app')
 @section('content')
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1>Quản lý quyền</h1>
-          </div>
-          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-              <li class="breadcrumb-item active">Quản lý quyền</li>
-            </ol>
-          </div>
-        </div>
-      </div><!-- /.container-fluid -->
-    </section>
-
-    <!-- Main content -->
-    <section class="content">
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Danh sách quyền</h3>
-              <div class="card-tools">
+<div class="max-w-7xl mx-auto sm:px-6 lg:px-8 py-6">
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Quản lý quyền</h2>
+                <p class="text-sm text-gray-600 mt-1">Quản lý các quyền hạn trong hệ thống</p>
+            </div>
+            <div>
                 @can('permission-create')
-                    <button type="button" class="btn btn-success btn-create" data-toggle="modal" data-target="#PermissionModal">
-                        <i class="fas fa-plus-square"></i> Thêm quyền
-                    </button>
+                    <a class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition duration-150 ease-in-out" href="{{ route('permissions.create') }}">
+                        <i class="fas fa-plus-square mr-2"></i> Thêm quyền
+                    </a>
                 @endcan
             </div>
-            </div>
-            <!-- /.card-header -->
-            <div class="card-body">
-              <table id="example1" class="table table-bordered table-striped">
-                <thead>
-                <tr class="bg-primary">
-                    <th width="30px"></th>
-                    <th>Tên quyền</th>
-                    <th>Guard Name</th>
-                    <th width="200px">Thao tác</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-                <tfoot>
-                </tfoot>
-              </table>
-            </div>
-            <!-- /.card-body -->
-          </div>
-          <!-- /.card -->
         </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
 
-      <!-- Modal UpadateOrCreate Permission -->
-
-    <div class="modal fade" id="PermissionModal">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-                <form method="POST" action="" id="permissionForm">
-                @csrf
-                <div class="modal-header">
-                    <h4 class="modal-title">Thêm quyền</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
-                    <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="_method" id="permission_method" value="POST">
-                    <input type="hidden" name="id" id="id" value="">
-                    <div class="form-group">
-                        <label for="name" class="col-sm-2 control-label">Tên quyền</label>
-                        <div class="col-sm-12">
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" placeholder="Điền tên" value="" required>
-                            @error('name')
-                                <p class="mt-2 mb-0 error text-danger">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="guard_name" class="col-sm-2 control-label">Guard Name</label>
-                        <div class="col-sm-12">
-                            <input type="text" class="form-control" id="guard_name" name="guard_name" placeholder="web" value="web">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary" id="savedata">Lưu</button>
-                </div>
-                </form>
+        <!-- Content -->
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên quyền</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guard Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach ($permissions as $key => $permission)
+                        <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                {{ ($permissions->currentPage() - 1) * $permissions->perPage() + $key + 1 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center">
+                                            <i class="fas fa-key text-white text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ $permission->name }}</div>
+                                        @if($permission->name == 'Super-Admin')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <i class="fas fa-crown mr-1"></i>Quản trị viên cao cấp
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-shield-alt mr-1"></i>{{ $permission->guard_name }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center space-x-2">
+                                    @can('permission-edit')
+                                        <a class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700  rounded-md transition duration-150 ease-in-out" href="{{ route('permissions.edit', $permission->id) }}" title="Sửa" style="margin-right: 10px;">
+                                            <i class="fas fa-edit mr-1"></i> Sửa
+                                        </a>
+                                    @endcan
+                                    
+                                    <a class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700  rounded-md transition duration-150 ease-in-out" href="{{ route('permissions.show', $permission->id) }}" title="Xem chi tiết" style="margin-right: 10px;">
+                                        <i class="fas fa-eye mr-1"></i> Chi tiết
+                                    </a>
+                                    
+                                    @can('permission-delete')
+                                        {!! Form::open(['method' => 'DELETE','route' => ['permissions.destroy', $permission->id],'style'=>'display:inline']) !!}
+                                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700  rounded-md transition duration-150 ease-in-out delete_confirm" title="Xóa">
+                                                <i class="fas fa-trash mr-1"></i> Xóa
+                                            </button>
+                                        {!! Form::close() !!}
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-            <!-- /.modal-content -->
-        </div>
-        <!-- /.modal-dialog -->
+
+            <!-- Pagination -->
+            <div class="mt-6 flex items-center justify-between">
+                <div class="text-sm text-gray-600" > 
+                    Hiển thị {{ $permissions->firstItem() }} đến {{ $permissions->lastItem() }} trong {{ $permissions->total() }} quyền
+                </div>
+                <div class="flex items-center space-x-2">
+                    {{ $permissions->links() }}
+                </div>
+            </div>
+        </div>  
     </div>
-    </section>
-    <!-- /.content -->
-<script src="{{ asset('backend/plugins/jquery/jquery.min.js') }}"></script>
-<script>
-  $(function () {
-    var table = $("#example1").DataTable({
-      "paging": true,
-      "lengthChange": true,
-      "searching": true,
-      "ordering": true,
-      "info": true,
-      "autoWidth": false,
-      "responsive": true,
-      "language": {
-                "url": "{{ asset('backend/json/jsondatatable.json') }}"
-       },
-       "ajax": {
-           url: "{{ route('permissions.index') }}",
-           dataSrc: 'permissions'
-       },
-       'columns':[
-                {
-                    className:      'dt-control',
-                    orderable:      false,
-                    data:           null,
-                    defaultContent: '<i class="nav-icon far fa-circle text-info"></i>'
-                },
-                { data: 'name' },
-                { data: 'guard_name' },
-                { data: 'id',
-                    orderable: false,
-                    render: function(data){
-                        var buttons = '';
-                        @can('permission-edit')
-                            buttons += '<button class="btn btn-sm btn-info btn-edit mr-1" data-id="'+data+'">Sửa</button>';
-                        @endcan
-                        @can('permission-delete')
-                            buttons += '<button class="btn btn-sm btn-danger btn-delete" data-id="'+data+'">Xóa</button>';
-                        @endcan
-                        return buttons;
-                    }
-                }
-        ],
-       order: [[1, 'desc']],
-        "columnDefs": [
-                { 'className': 'dt-center','targets': '_all' }
-       ]
-    });
-    //Plus detail
-    $('#example1 tbody').on('click', 'td.dt-control', function () {
-        var tr = $(this).closest('tr');
-        var row = table.row(tr);
+</div>
 
-        if ( row.child.isShown() ) {
-            row.child.hide();
-            tr.removeClass('shown');
-        }
-        else {
-            row.child( format(row.data()) ).show();
-            tr.addClass('shown');
-        }
-    });
-    function format ( rowData ) {
-            return '<table class="table table-bordered">'+
-                '<tr style="background: #f9f9f9">'+
-                    '<th width="30%">Title</th>'+
-                    '<th width="70%">Details</th>'+
-                '</tr>'+
-                '<tr>'+
-                    '<td>ID:</td>'+
-                    '<td>'+rowData.id+'</td>'+
-                '</tr>'+
-                '<tr>'+
-                    '<td>Name:</td>'+
-                    '<td>'+rowData.name+'</td>'+
-                '</tr>'+
-                '<tr>'+
-                    '<td>Guard Name:</td>'+
-                    '<td>'+rowData.guard_name+'</td>'+
-                '</tr>'+
-                '<tr>'+
-                    '<td>Created at:</td>'+
-                    '<td>'+new Date(rowData.created_at).toLocaleString()+'</td>'+
-                '</tr>'+
-            '</table>';
-    };
-    //create
-        $('.btn-create').on('click', function (e) {
-            e.preventDefault;
-            var url = '{{ route("permissions.store") }}';
-            $('.modal-title').html("Thêm quyền");
-            $('#permissionForm').attr('action', url);
-            $('#permission_method').attr('value', 'POST');
-            $('#id').val('');
-            $('#name').val('');
-            $('#guard_name').val('web');
-        });
-        //edit
-        $('#example1').on('click', '.btn-edit', function () {
-            var permission_id = $(this).data('id');
-            var url = '{{ route("permissions.update","") }}' +'/'+ permission_id;
-            var rows = table.rows().data().toArray();
-            var found = rows.find(function(r){ return String(r.id) === String(permission_id); });
-            if(found){
-                $('#PermissionModal').modal('show');
-                $('.modal-title').html("Sửa quyền");
-                $('#id').val(permission_id);
-                $('#name').val(found.name);
-                $('#guard_name').val(found.guard_name);
-                $('#permissionForm').attr('action', url);
-                $('#permission_method').attr('value', 'PATCH');
-            } else {
-                $.get('{{ route("permissions.index") }}', function(data){
-                    var item = (data.permissions || []).find(function(v){ return String(v.id) === String(permission_id); });
-                    if(item){
-                        $('#PermissionModal').modal('show');
-                        $('.modal-title').html("Sửa quyền");
-                        $('#id').val(permission_id);
-                        $('#name').val(item.name);
-                        $('#guard_name').val(item.guard_name);
-                        $('#permissionForm').attr('action', url);
-                        $('#permission_method').attr('value', 'PATCH');
-                    }
-                });
-            }
-        });
+@endsection
 
-
-        $('#PermissionModal').on('hidden.bs.modal', function () {
-            $(this).find('form').trigger('reset');
-            $('.error').html('');
-            $('#name').removeClass("is-invalid");
-        });
-
-        //Delete
-        $('#example1').on("click", ".btn-delete", function() {
-            var permission_id = $(this).data('id');
-            var url = '{{ route("permissions.destroy","") }}' +'/'+ permission_id;
-
+@section('scripts')
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.delete_confirm').forEach(function(btn){
+        btn.addEventListener('click', function(event){
+            const form = this.closest('form');
+            event.preventDefault();
             Swal.fire({
-                title: 'Bạn chắc chắn muốn xóa dữ liệu này!',
-                text: "Nếu bạn xóa dữ liệu này sẽ biến mất vĩnh viễn.",
+                title: 'Bạn có chắc chắn muốn xóa quyền này?',
+                text: "Hành động này không thể hoàn tác!",
                 icon: 'warning',
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Xác nhận xóa',
-                showCancelButton: true,
-                cancelButtonText: "Hủy",
-
+                showDenyButton: true,
+                confirmButtonText: 'Có, xóa nó!',
+                denyButtonText: 'Hủy bỏ',
+                confirmButtonColor: '#dc2626',
+                denyButtonColor: '#6b7280',
             }).then((result) => {
-                if (result.value == true) {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        cache: false,
-                        data: {
-                            _token:'{{ csrf_token() }}',
-                        },
-                        success: function (response){
-                            if(response.success) {
-                                Swal.fire(
-                                    "Đã xóa!",
-                                    response.message,
-                                    "success"
-                                ).then(function(){
-                                    table.ajax.reload(null, false);
-                                });
-                            } else {
-                                Swal.fire(
-                                    "Lỗi!",
-                                    response.message,
-                                    "error"
-                                );
-                            }
-                        },
-                        error: function() {
-                            Swal.fire(
-                                "Lỗi!",
-                                "Có lỗi xảy ra khi xóa quyền",
-                                "error"
-                            );
-                        }
-                    });
-                }else{
-                    Swal.fire('Dữ liệu được bảo toàn', '', 'info')
+                if (result.isConfirmed) {
+                    form.submit();
+                } else if (result.isDenied) {
+                    Swal.fire('Dữ liệu được bảo toàn', '', 'info');
                 }
-
             });
         });
-
-        @if(count($errors))
-            $('#PermissionModal').modal('show');
-        @endif
-  });
+    });
+});
 </script>
 @endsection
 

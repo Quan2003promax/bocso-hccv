@@ -213,11 +213,29 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->identity_number }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <a href="{{ route('admin.service-registrations.show', $registration->id) }}" 
-                                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
-                                        <i class="fas fa-eye me-1"></i>
-                                        Xem chi tiết
-                                    </a>
+                                    @if($registration->document_file)
+                                        @php
+                                            $fileExtension = strtolower(pathinfo($registration->document_original_name, PATHINFO_EXTENSION));
+                                            $canView = in_array($fileExtension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']);
+                                        @endphp
+                                        <div class="flex flex-col space-y-1">
+                                            @if($canView)
+                                                <a href="{{ Storage::disk('public')->url($registration->document_file) }}" target="_blank"
+                                                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    Xem tài liệu
+                                                </a>
+                                            @endif
+                                            <a href="{{ Storage::disk('public')->url($registration->document_file) }}" download="{{ $registration->document_original_name }}"
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
+                                                <i class="fas fa-download me-1"></i>
+                                                Tải về
+                                            </a>
+                                            <small class="text-gray-400">{{ Str::limit($registration->document_original_name, 25) }}</small>
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400">Không có</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -425,6 +443,12 @@
         return (str && str.length > maxLength) ? str.substring(0, maxLength - 3) + '...' : (str || 'Không có');
     }
 
+    function canViewFile(filename) {
+        if (!filename) return false;
+        const extension = filename.toLowerCase().split('.').pop();
+        return ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension);
+    }
+
     function makeDashboardRow(item) {
         const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
 
@@ -450,12 +474,14 @@
                 item.document_file
                 ? `
                 <div class="flex flex-col space-y-1">
-                    <a href="/admin/documents/${item.id}/view" target="_blank"
+                    ${canViewFile(item.document_original_name) ? `
+                    <a href="/admin/documents/file/${item.document_file}" target="_blank"
                         class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
                         <i class="fas fa-eye me-1"></i>
                         Xem tài liệu
                     </a>
-                    <a href="/storage/${item.document_file}" download="${item.document_original_name}"
+                    ` : ''}
+                    <a href="/admin/documents/file/${item.document_file}" download="${item.document_original_name}"
                         class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
                         <i class="fas fa-download me-1"></i>
                         Tải về
@@ -635,5 +661,6 @@
 
         tbody.prepend(newRow);
     }
+
 </script>
 @endpush

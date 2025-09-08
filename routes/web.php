@@ -70,11 +70,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Document routes
     Route::get('documents/{id}/view', [DocumentController::class, 'view'])->name('documents.view');
     Route::get('documents/{id}/info', [DocumentController::class, 'getFileInfo'])->name('documents.info');
-    Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
     
-    // Public file access route (không cần auth)
-    Route::get('documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('documents.serve');
 });
+
+// Public file access route (không cần auth) - moved outside auth middleware
+Route::get('admin/documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('admin.documents.serve');
 
 // routes/web.php
 Route::get('/test-status', function () {
@@ -86,28 +86,6 @@ Route::get('/test-status', function () {
     return 'Broadcasted';
 });
 
-// Test route để kiểm tra file access
-Route::get('/test-file-access', function () {
-    $filename = '1756527701_iqaNf2AuTU_phieu-dang-ky-thuc-tapdocx';
-    $filePath = 'documents/' . $filename;
-    
-    if (!Storage::disk('public')->exists($filePath)) {
-        return 'File không tồn tại';
-    }
-    
-    $fullPath = Storage::disk('public')->path($filePath);
-    $mimeType = mime_content_type($fullPath);
-    $fileSize = filesize($fullPath);
-    
-    return [
-        'file_exists' => true,
-        'filename' => $filename,
-        'mime_type' => $mimeType,
-        'file_size' => $fileSize,
-        'storage_path' => $fullPath,
-        'public_url' => Storage::url($filePath),
-        'serve_url' => url(route('admin.documents.serve', ['filename' => $filename]))
-    ];
-});
+
 
 require __DIR__ . '/auth.php';

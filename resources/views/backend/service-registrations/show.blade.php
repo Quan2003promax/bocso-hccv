@@ -92,13 +92,23 @@
                                         <div class="text-sm text-gray-500">Tài liệu đính kèm</div>
                                         <div class="mt-2">
                                             <div class="flex items-center space-x-2">
-                                                <a href="{{ route('admin.documents.view', $registration->id) }}" 
-                                                   target="_blank"
-                                                   class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200" style="margin-right: 10px;">
-                                                    <i class="fas fa-eye mr-2"></i>
-                                                    Xem tài liệu
-                                                </a>
-                                                <a href="{{ Storage::url($registration->document_file) }}" 
+                                                @php
+                                                    $fileExtension = strtolower(pathinfo($registration->document_original_name, PATHINFO_EXTENSION));
+                                                    $canView = in_array($fileExtension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']);
+                                                @endphp
+                                                @php
+                                                    $filename = basename($registration->document_file);
+                                                    $fileUrl = route('admin.documents.serve', ['filename' => $filename]);
+                                                @endphp
+                                                @if($canView)
+                                                    <a href="{{ $fileUrl }}" 
+                                                       target="_blank"
+                                                       class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200" style="margin-right: 10px;">
+                                                        <i class="fas fa-eye mr-2"></i>
+                                                        Xem tài liệu
+                                                    </a>
+                                                @endif
+                                                <a href="{{ $fileUrl }}" 
                                                    download="{{ $registration->document_original_name }}"
                                                    class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-green-100 text-green-800 hover:bg-green-200">
                                                     <i class="fas fa-download mr-2"></i>

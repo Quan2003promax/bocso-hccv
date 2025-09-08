@@ -9,12 +9,175 @@ http://your-domain.com/api/v1
 ```
 
 ## Authentication
-Hiện tại API không yêu cầu authentication. Trong tương lai có thể thêm JWT hoặc API Key.
+API sử dụng **Laravel Sanctum** để xác thực. Có 2 loại routes:
+
+### Public Routes (Không cần authentication)
+- `GET /departments` - Lấy danh sách phòng ban
+- `GET /queue-status` - Lấy trạng thái hàng đợi
+- `POST /auth/login` - Đăng nhập để lấy token
+
+### Protected Routes (Cần authentication)
+- `POST /register` - Đăng ký dịch vụ
+- `POST /check-queue` - Kiểm tra số thứ tự
+- `GET /statistics` - Thống kê tổng quan
+- `POST /auth/logout` - Đăng xuất
+- `GET /auth/me` - Lấy thông tin user hiện tại
+
+### Cách sử dụng Authentication
+
+1. **Đăng nhập để lấy token:**
+```bash
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "password"
+}
+```
+
+2. **Sử dụng token trong các request:**
+```bash
+Authorization: Bearer {your-token-here}
+```
+
+3. **Đăng xuất:**
+```bash
+POST /api/v1/auth/logout
+Authorization: Bearer {your-token-here}
+```
 
 ## Endpoints
 
-### 1. Đăng ký dịch vụ
+### Authentication Endpoints
+
+#### 1. Đăng nhập
+**POST** `/auth/login`
+
+**Request Body:**
+```json
+{
+    "email": "admin@example.com",
+    "password": "password"
+}
+```
+
+**Response Success (200):**
+```json
+{
+    "success": true,
+    "message": "Đăng nhập thành công",
+    "data": {
+        "user": {
+            "id": 1,
+            "name": "Admin User",
+            "email": "admin@example.com",
+            "roles": ["Super-Admin"],
+            "permissions": ["user-list", "user-create"],
+            "departments": ["IT"]
+        },
+        "token": "1|abcdef123456...",
+        "token_type": "Bearer"
+    }
+}
+```
+
+**Response Error (401):**
+```json
+{
+    "success": false,
+    "message": "Email hoặc mật khẩu không đúng"
+}
+```
+
+#### 2. Lấy thông tin user hiện tại
+**GET** `/auth/me`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+    "success": true,
+    "data": {
+        "user": {
+            "id": 1,
+            "name": "Admin User",
+            "email": "admin@example.com",
+            "roles": ["Super-Admin"],
+            "permissions": ["user-list", "user-create"],
+            "departments": ["IT"],
+            "created_at": "2024-01-15T10:00:00.000000Z"
+        }
+    }
+}
+```
+
+#### 3. Đăng xuất
+**POST** `/auth/logout`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+    "success": true,
+    "message": "Đăng xuất thành công"
+}
+```
+
+#### 4. Đăng xuất khỏi tất cả thiết bị
+**POST** `/auth/logout-all`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+    "success": true,
+    "message": "Đăng xuất khỏi tất cả thiết bị thành công"
+}
+```
+
+#### 5. Làm mới token
+**POST** `/auth/refresh`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+    "success": true,
+    "message": "Token đã được làm mới",
+    "data": {
+        "token": "2|xyz789...",
+        "token_type": "Bearer"
+    }
+}
+```
+
+### Service Endpoints
+
+#### 1. Đăng ký dịch vụ
 **POST** `/register`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json

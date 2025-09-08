@@ -38,7 +38,6 @@ class HomeController extends Controller
             ->whereIn('status', ['pending', 'received', 'processing', 'returned']) // case short field status
             ->orderByRaw("FIELD(status, 'pending', 'received','processing', 'completed', 'returned')")
             ->orderBy('created_at', 'asc')
-            ->limit(10)
             ->get();
 
         return view('home', compact('departments', 'pendingRegistrations', 'searchQuery', 'searchResults'));
@@ -108,7 +107,6 @@ class HomeController extends Controller
             ->whereIn('status', ['pending', 'received', 'processing', 'returned'])
             ->orderByRaw("FIELD(status, 'pending', 'received','processing', 'completed', 'returned')")
             ->orderBy('created_at', 'asc')
-            ->limit(10)
             ->get();
 
         return view('home', compact('departments', 'pendingRegistrations', 'searchQuery', 'searchResults'));
@@ -216,23 +214,35 @@ class HomeController extends Controller
             throw new \Exception('Không tìm thấy phòng ban');
         }
 
-        $today = now()->format('Ymd');
-
-        // Lấy số thứ tự cuối cùng của ngày hôm nay
-        $lastRegistration = ServiceRegistration::where('department_id', $departmentId)
+        // Lấy số thứ tự cao nhất của ngày hôm nay (không phụ thuộc vào thứ tự tạo)
+        $maxQueueNumber = ServiceRegistration::where('department_id', $departmentId)
             ->whereDate('created_at', today())
-            ->orderBy('id', 'desc')
-            ->first();
+            ->max('queue_number');
 
-        if ($lastRegistration) {
-            $lastNumber = (int) substr($lastRegistration->queue_number, -3);
+        \Log::info('Generating queue number', [
+            'department_id' => $departmentId,
+            'max_queue_number_today' => $maxQueueNumber,
+            'today' => today()->toDateString()
+        ]);
+
+        if ($maxQueueNumber) {
+            // Lấy số thứ tự cao nhất và tăng lên 1
+            $lastNumber = (int) $maxQueueNumber;
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
 
         // Format đơn giản: chỉ hiển thị số thứ tự
-        return str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        $queueNumber = str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        
+        \Log::info('Generated queue number', [
+            'department_id' => $departmentId,
+            'new_number' => $newNumber,
+            'formatted_queue_number' => $queueNumber
+        ]);
+
+        return $queueNumber;
     }
 
     /**
