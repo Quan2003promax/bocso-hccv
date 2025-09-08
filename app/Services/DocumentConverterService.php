@@ -401,13 +401,14 @@ class DocumentConverterService
         }
 
         // Tạo URL đầy đủ đến file thông qua route public
-        $filename = basename($registration->document_file);
-        $fileUrl = url(route('admin.documents.serve', ['filename' => $filename]));
+        // Dùng path đầy đủ để route serve có thể truy xuất đúng file trong thư mục con
+        $path = ltrim($registration->document_file, '/');
+        $fileUrl = url(route('admin.documents.serve', ['path' => $path]));
         
         // Debug: Log URL để kiểm tra
         \Log::info('Google Docs Viewer URL generation', [
             'file_path' => $registration->document_file,
-            'filename' => $filename,
+            'filename' => $registration->document_original_name,
             'public_url' => $fileUrl,
             'route_name' => 'admin.documents.serve'
         ]);
@@ -440,13 +441,13 @@ class DocumentConverterService
         }
 
         // Tạo URL đầy đủ đến file thông qua route public
-        $filename = basename($registration->document_file);
-        $fileUrl = url(route('admin.documents.serve', ['filename' => $filename]));
+        $path = ltrim($registration->document_file, '/');
+        $fileUrl = url(route('admin.documents.serve', ['path' => $path]));
         
         // Debug: Log URL để kiểm tra
         \Log::info('Office Online Viewer URL generation', [
             'file_path' => $registration->document_file,
-            'filename' => $filename,
+            'filename' => $registration->document_original_name,
             'public_url' => $fileUrl,
             'route_name' => 'admin.documents.serve'
         ]);
@@ -516,8 +517,8 @@ class DocumentConverterService
 
         return [
             'can_view' => true,
-            'view_url' => $viewUrl,
-            'download_url' => $downloadUrl,
+            'view_url' => Storage::url($viewablePath),
+            'download_url' => Storage::url($registration->document_file),
             'original_name' => $registration->document_original_name,
             'file_size' => $registration->formatted_file_size,
             'mime_type' => $registration->document_mime_type,

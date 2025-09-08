@@ -70,11 +70,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Document routes
     Route::get('documents/{id}/view', [DocumentController::class, 'view'])->name('documents.view');
     Route::get('documents/{id}/info', [DocumentController::class, 'getFileInfo'])->name('documents.info');
-    
+    Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
 });
 
-// Public file access route (không cần auth) - moved outside auth middleware
-Route::get('admin/documents/file/{filename}', [DocumentController::class, 'serveFile'])->name('admin.documents.serve');
+// Public file access route (không cần auth) - hỗ trợ cả đường dẫn con
+Route::get('admin/documents/file/{path}', [DocumentController::class, 'serveFile'])
+    ->where('path', '.*')
+    ->name('admin.documents.serve');
 
 // routes/web.php
 Route::get('/test-status', function () {

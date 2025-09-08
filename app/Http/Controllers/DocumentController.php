@@ -28,7 +28,65 @@ class DocumentController extends Controller
         }
 
         // Lấy thông tin file
+        // Kiểm tra nếu là file DOC/DOCX, thử convert sang PDF trước
+        $fileExtension = strtolower(pathinfo($registration->document_original_name, PATHINFO_EXTENSION));
+        if (in_array($fileExtension, ['doc', 'docx'])) {
+            try {
+                // Thử convert sang PDF
+                $pdfPath = $this->documentConverter->convertToPdf(
+                    $registration->document_file, 
+                    $registration->document_original_name
+                );
+                
+                if ($pdfPath) {
+                    $fileInfo = $this->documentConverter->getFileInfo($registration);
+                    $path = ltrim($pdfPath, '/');
+                    $fileInfo['pdf_url'] = route('admin.documents.serve', ['path' => $path]);
+                    $fileInfo['is_converted'] = true;
+                    
+                    \Log::info('Converted DOC/DOCX to PDF successfully', [
+                        'id' => $registration->id,
+                        'file_name' => $registration->document_original_name,
+                        'pdf_path' => $pdfPath,
+                        'pdf_url' => $fileInfo['pdf_url']
+                    ]);
+                    
+                    return view('documents.view-pdf', compact('registration', 'fileInfo'));
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to convert DOC/DOCX to PDF, falling back to Google Docs Viewer', [
+                    'id' => $registration->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            // Fallback: Sử dụng Google Docs Viewer
+            $googleDocsUrl = $this->documentConverter->getGoogleDocsViewerUrl($registration);
+            if ($googleDocsUrl) {
+                $fileInfo = $this->documentConverter->getFileInfo($registration);
+                $fileInfo['google_docs_url'] = $googleDocsUrl;
+                
+                \Log::info('Using Google Docs Viewer as fallback', [
+                    'id' => $registration->id,
+                    'file_name' => $registration->document_original_name,
+                    'google_docs_url' => $googleDocsUrl
+                ]);
+                
+                return view('documents.view-google-docs', compact('registration', 'fileInfo'));
+            }
+        }
+        
+        // Đối với các file khác, kiểm tra xem có thể xem trực tiếp không
         $fileInfo = $this->documentConverter->getFileInfo($registration);
+        // Chuẩn hoá URL đi qua route serve để gắn header inline trong iframe
+        if (!empty($fileInfo['pdf_url'])) {
+            $path = ltrim(parse_url($fileInfo['pdf_url'], PHP_URL_PATH), '/');
+            $fileInfo['pdf_url'] = route('admin.documents.serve', ['path' => $path]);
+        }
+        if (!empty($fileInfo['view_url'])) {
+            $path = ltrim(parse_url($fileInfo['view_url'], PHP_URL_PATH), '/');
+            $fileInfo['view_url'] = route('admin.documents.serve', ['path' => $path]);
+        }
         
         // Luôn hiển thị trang tải về cho tất cả loại file
         return view('documents.download', compact('registration', 'fileInfo'));
@@ -60,9 +118,12 @@ class DocumentController extends Controller
     /**
      * Serve file publicly (không cần auth)
      */
-    public function serveFile($filename)
+    public function serveFile($path)
     {
         try {
+            // Extract filename from path (handle both single filename and nested paths)
+            $filename = basename($path);
+            
             // Validate filename để tránh path traversal
             if (strpos($filename, '..') !== false || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) {
                 \Log::warning('Suspicious filename detected', ['filename' => $filename]);
@@ -144,7 +205,7 @@ class DocumentController extends Controller
             
         } catch (\Exception $e) {
             \Log::error('Error serving file: ' . $e->getMessage(), [
-                'filename' => $filename,
+                'filename' => $filename ?? 'unknown',
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
