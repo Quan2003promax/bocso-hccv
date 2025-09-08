@@ -214,11 +214,24 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->department->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->identity_number }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <a href="{{ route('admin.service-registrations.show', $registration->id) }}"
-                                        class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
-                                        <i class="fas fa-eye me-1"></i>
-                                        Xem chi tiết
-                                    </a>
+                                    @if($registration->document_file)
+                                    <div class="flex flex-col space-y-1">
+                                        <a href="{{ route('admin.documents.serve', $registration->id) }}" target="_blank"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Xem tài liệu
+                                        </a>
+                                        <a href="{{ asset('storage/' . $registration->document_file) }}" download="{{ $registration->document_original_name }}"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 hover:bg-green-200">
+                                            <i class="fas fa-download me-1"></i>
+                                            Tải về
+                                        </a>
+                                        <small class="text-gray-400">{{ \Illuminate\Support\Str::limit($registration->document_original_name, 25) }}</small>
+                                        <!-- <small class="text-gray-400">{{ $registration->formatted_file_size ?? '' }}</small> -->
+                                    </div>
+                                    @else
+                                    <span class="text-gray-400">Không có</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $registration->created_at->format('H:i d/m/Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -252,6 +265,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @can('service-registration-edit')
                                     <a href="{{ route('admin.service-registrations.show', $registration) }}"
+                                        target="_blank"
                                         class="text-blue-600 hover:text-blue-900 me-3">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -484,7 +498,7 @@
                         Tải về
                     </a>
                     <small class="text-gray-400">${truncate(item.document_original_name, 25)}</small>
-                    <small class="text-gray-400">${item.formatted_file_size || ''}</small>
+                    // <small class="text-gray-400">${item.formatted_file_size || ''}</small>
                 </div>
                 `
                 : '<span class="text-gray-400">Không có</span>'
@@ -508,7 +522,7 @@
                 `}
             </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <a href="/admin/service-registrations/${item.id}" class="text-blue-600 hover:text-blue-900 me-3">
+            <a href="/admin/service-registrations/${item.id}" target="_blank" class="text-blue-600 hover:text-blue-900 me-3">
                 <i class="fas fa-eye"></i>
             </a>
             <form action="/admin/service-registrations/${item.id}" method="POST" class="inline delete-form">
@@ -521,14 +535,21 @@
         </td>
     </tr>`;
     }
+
     function translateStatus(status) {
         switch (status) {
-            case 'pending': return 'Chờ xử lý';
-            case 'received': return 'Đã tiếp nhận';
-            case 'processing': return 'Đang xử lý';
-            case 'completed': return 'Hoàn thành';
-            case 'returned': return 'Trả hồ sơ';
-            default: return 'Không xác định';
+            case 'pending':
+                return 'Chờ xử lý';
+            case 'received':
+                return 'Đã tiếp nhận';
+            case 'processing':
+                return 'Đang xử lý';
+            case 'completed':
+                return 'Hoàn thành';
+            case 'returned':
+                return 'Trả hồ sơ';
+            default:
+                return 'Không xác định';
         }
     }
     echo.channel('laravel_database_registrations')
