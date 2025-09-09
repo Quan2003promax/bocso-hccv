@@ -27,7 +27,6 @@ class DocumentController extends Controller
             abort(404, 'Không có tài liệu');
         }
 
-        // Lấy thông tin file
         // Kiểm tra nếu là file DOC/DOCX, thử convert sang PDF trước
         $fileExtension = strtolower(pathinfo($registration->document_original_name, PATHINFO_EXTENSION));
         if (in_array($fileExtension, ['doc', 'docx'])) {
@@ -116,100 +115,50 @@ class DocumentController extends Controller
 
     
     /**
-     * Serve file publicly (không cần auth)
+     * Serve file with authentication (yêu cầu auth)
      */
     public function serveFile($path)
     {
-        try {
-            // Extract filename from path (handle both single filename and nested paths)
-            $filename = basename($path);
-            
-            // Validate filename để tránh path traversal
-            if (strpos($filename, '..') !== false || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) {
-                \Log::warning('Suspicious filename detected', ['filename' => $filename]);
-                abort(400, 'Tên file không hợp lệ');
-            }
-            
-            // Kiểm tra file trong thư mục documents
-            $filePath = 'documents/' . $filename;
-            
-            if (!Storage::disk('public')->exists($filePath)) {
-                // Thử kiểm tra trong thư mục converted
-                $convertedPath = 'documents/converted/' . $filename;
-                if (Storage::disk('public')->exists($convertedPath)) {
-                    $filePath = $convertedPath;
-                } else {
-                    \Log::error('File not found', [
-                        'filename' => $filename,
-                        'documents_path' => $filePath,
-                        'converted_path' => $convertedPath,
-                        'storage_path' => Storage::disk('public')->path('documents/')
-                    ]);
-                    abort(404, 'File không tồn tại: ' . $filename);
-                }
-            }
-            
-            $fullPath = Storage::disk('public')->path($filePath);
-            
-            if (!file_exists($fullPath)) {
-                \Log::error('Physical file not found', [
-                    'filename' => $filename,
-                    'file_path' => $filePath,
-                    'full_path' => $fullPath
-                ]);
-                abort(404, 'File không tồn tại: ' . $filename);
-            }
-            
-            $mimeType = mime_content_type($fullPath);
-            $fileSize = filesize($fullPath);
-            
-            $allowedMimeTypes = [
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'image/jpeg',
-                'image/jpg',
-                'image/png',
-                'image/gif',
-                'image/bmp',
-                'image/webp'
-            ];
-            
-            if (!in_array($mimeType, $allowedMimeTypes)) {
-                \Log::warning('Unsupported MIME type', [
-                    'filename' => $filename,
-                    'mime_type' => $mimeType
-                ]);
-                abort(415, 'Loại file không được hỗ trợ');
-            }
-            
-            \Log::info('Serving file successfully', [
-                'filename' => $filename,
-                'file_path' => $filePath,
-                'full_path' => $fullPath,
-                'mime_type' => $mimeType,
-                'file_size' => $fileSize
-            ]);
-            
-            $safeFilename = preg_replace('/[^\w\-_\.]/', '_', $filename);
-            
-            return response()->file($fullPath, [
-                'Content-Type' => $mimeType,
-                'Content-Length' => $fileSize,
-                'Content-Disposition' => 'inline; filename="' . $safeFilename . '"',
-                'Access-Control-Allow-Origin' => '*',
-                'Access-Control-Allow-Methods' => 'GET, OPTIONS',
-                'Access-Control-Allow-Headers' => 'Content-Type',
-                'Cache-Control' => 'public, max-age=3600', // Cache 1 hour
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Error serving file: ' . $e->getMessage(), [
-                'filename' => $filename ?? 'unknown',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            abort(500, 'Lỗi khi tải file: ' . $e->getMessage());
+        // Kiểm tra user đã đăng nhập
+        if (!auth()->check()) {
+            abort(401, 'Unauthorized access');
         }
+        
+        // Chuẩn hoá và bảo vệ đường dẫn
+        $filePath = ltrim($path, '/');
+        if (str_contains($filePath, '..')) {
+            abort(403, 'Đường dẫn không hợp lệ');
+        }
+        if (!str_starts_with($filePath, 'documents/')) {
+            abort(403, 'Chỉ cho phép truy cập thư mục documents');
+        }
+        
+        // Kiểm tra quyền truy cập file
+        if (!auth()->user()->hasPermissionTo('document-view')) {
+            abort(403, 'Không có quyền truy cập file');
+        }
+        
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'File không tồn tại');
+        }
+        
+        $fullPath = Storage::disk('public')->path($filePath);
+        $mimeType = mime_content_type($fullPath);
+        $isInlineRenderable = in_array($mimeType, [
+            'application/pdf',
+            'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'
+        ]);
+
+        $disposition = ($isInlineRenderable ? 'inline' : 'attachment') . '; filename="' . basename($fullPath) . '"';
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => $disposition,
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Referrer-Policy' => 'no-referrer-when-downgrade',
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+            'Access-Control-Allow-Headers' => 'Content-Type',
+        ]);
     }
 }

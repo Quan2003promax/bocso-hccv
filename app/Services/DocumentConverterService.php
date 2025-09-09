@@ -122,8 +122,13 @@ class DocumentConverterService
             }
 
             // Command để convert với cấu hình tốt hơn cho tiếng Việt
+            // Validate và escape input để tránh command injection
+            $libreOfficePath = escapeshellarg($libreOfficePath);
+            $outputDir = escapeshellarg($outputDir);
+            $inputPath = escapeshellarg($inputPath);
+            
             $command = sprintf(
-                '"%s" --headless --convert-to pdf --outdir "%s" --infilter="writer8" "%s"',
+                '%s --headless --convert-to pdf --outdir %s --infilter="writer8" %s',
                 $libreOfficePath,
                 $outputDir,
                 $inputPath
@@ -479,8 +484,7 @@ class DocumentConverterService
         // Kiểm tra nếu là file DOC/DOCX có thể xem qua viewer
         $fileExtension = strtolower(pathinfo($registration->document_original_name, PATHINFO_EXTENSION));
         if (in_array($fileExtension, ['doc', 'docx'])) {
-            $downloadFilename = basename($registration->document_file);
-            $downloadUrl = route('admin.documents.serve', ['filename' => $downloadFilename]);
+            $downloadUrl = Storage::url($registration->document_file);
             
             return [
                 'can_view' => true,
@@ -495,8 +499,7 @@ class DocumentConverterService
         }
         
         if (!$viewablePath) {
-            $downloadFilename = basename($registration->document_file);
-            $downloadUrl = route('admin.documents.serve', ['filename' => $downloadFilename]);
+            $downloadUrl = Storage::url($registration->document_file);
             
             return [
                 'can_view' => false,
@@ -508,17 +511,15 @@ class DocumentConverterService
         }
 
         // Tạo URL cho file view thông qua route serve
-        $filename = basename($viewablePath);
-        $viewUrl = route('admin.documents.serve', ['filename' => $filename]);
+        $viewUrl = url(route('admin.documents.serve', ['path' => ltrim($viewablePath, '/')]));
         
         // Tạo URL cho file download
-        $downloadFilename = basename($registration->document_file);
-        $downloadUrl = route('admin.documents.serve', ['filename' => $downloadFilename]);
+        $downloadUrl = Storage::url($registration->document_file);
 
         return [
             'can_view' => true,
-            'view_url' => Storage::url($viewablePath),
-            'download_url' => Storage::url($registration->document_file),
+            'view_url' => $viewUrl,
+            'download_url' => $downloadUrl,
             'original_name' => $registration->document_original_name,
             'file_size' => $registration->formatted_file_size,
             'mime_type' => $registration->document_mime_type,

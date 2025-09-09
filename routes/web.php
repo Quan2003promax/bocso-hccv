@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
     
-    // Routes demo middleware mới
+    
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [ExampleController::class, 'index'])->name('index');
         Route::get('/{id}/edit', [ExampleController::class, 'edit'])->name('edit');
@@ -73,20 +73,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('documents/{id}/convert', [DocumentController::class, 'convertToPdf'])->name('documents.convert');
 });
 
-// Public file access route (không cần auth) - hỗ trợ cả đường dẫn con
+// Protected file access route - yêu cầu authentication
 Route::get('admin/documents/file/{path}', [DocumentController::class, 'serveFile'])
     ->where('path', '.*')
+    ->middleware('auth')
     ->name('admin.documents.serve');
 
-// routes/web.php
-Route::get('/test-status', function () {
-    \App\Events\StatusUpdated::dispatch([
-        'status' => 'online',
-        'message' => 'Test ok',
-        'at' => now()->toDateTimeString(),
-    ]);
-    return 'Broadcasted';
-});
 
 
 

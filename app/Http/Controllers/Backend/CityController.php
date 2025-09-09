@@ -11,12 +11,23 @@ use Illuminate\Http\Request;
 class CityController extends Controller
 {
      public function postJson(){
+        // Sử dụng đường dẫn tương đối từ storage thay vì hardcoded path
+        $dataPath = storage_path('app/data/');
+        
+        // Kiểm tra file có tồn tại không
+        $cityFile = $dataPath . 'tinh_tp.json';
+        $districtFile = $dataPath . 'quan_huyen.json';
+        $wardFile = $dataPath . 'xa_phuong.json';
+        
+        if (!file_exists($cityFile) || !file_exists($districtFile) || !file_exists($wardFile)) {
+            return response()->json([
+                'error' => 'Data files not found. Please ensure the JSON files are placed in storage/app/data/'
+            ], 404);
+        }
 
-        $city = json_decode(file_get_contents("C:/Users/Hoang/Downloads/hanhchinhvn-master/hanhchinhvn-master/dist/tinh_tp.json"), true);
-
-        $district = json_decode(file_get_contents("C:/Users/Hoang/Downloads/hanhchinhvn-master/hanhchinhvn-master/dist/quan_huyen.json"), true);
-
-        $ward = json_decode(file_get_contents("C:/Users/Hoang/Downloads/hanhchinhvn-master/hanhchinhvn-master/dist/xa_phuong.json"), true);
+        $city = json_decode(file_get_contents($cityFile), true);
+        $district = json_decode(file_get_contents($districtFile), true);
+        $ward = json_decode(file_get_contents($wardFile), true);
 
         foreach ($city as $item){
             City::create([
